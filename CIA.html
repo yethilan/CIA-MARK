@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MarkDesk — Internal Marks Manager</title>
+<style>
+/* ============ THEME VARS ============ */
+:root{
+  --bg:#f1f5f9; --panel:#fff; --panel2:#f8fafc;
+  --ink:#0f172a; --ink2:#334155; --ink3:#475569;
+  --muted:#64748b; --line:#e2e8f0; --line2:#d9e0ea;
+  --brand:#4f46e5; --brand2:#6366f1;
+  --sidebar:#0f172a; --sidebar2:#1e293b;
+  --ok:#16a34a; --ok-bg:#dcfce7;
+  --warn:#d97706; --warn-bg:#fef3c7;
+  --bad:#dc2626; --bad-bg:#fee2e2;
+  --blue:#2563eb; --blue-bg:#dbeafe;
+  --band-bg:#ede9fe; --band-fg:#5b21b6;
+  --input-bg:#fff; --input-border:#cbd5e1;
+  --hover:#f1f5f9;
+}
+[data-theme="dark"]{
+  --bg:#0f172a; --panel:#1e293b; --panel2:#273549;
+  --ink:#f1f5f9; --ink2:#cbd5e1; --ink3:#94a3b8;
+  --muted:#94a3b8; --line:#334155; --line2:#475569;
+  --sidebar:#020617; --sidebar2:#0f172a;
+  --ok:#22c55e; --ok-bg:#14532d;
+  --warn:#f59e0b; --warn-bg:#78350f;
+  --bad:#ef4444; --bad-bg:#7f1d1d;
+  --blue:#3b82f6; --blue-bg:#1e3a8a;
+  --band-bg:#4c1d95; --band-fg:#e9d5ff;
+  --input-bg:#0f172a; --input-border:#475569;
+  --hover:#334155;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;transition:background .2s,color .2s}
+
+/* ============ LOGIN ============ */
+.login-screen{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.login-left{
+  background:linear-gradient(135deg,var(--brand) 0%,#7c3aed 45%,#db2777 100%);
+  display:flex;align-items:center;justify-content:center;padding:48px;
+  color:#fff;position:relative;overflow:hidden;
+}
+.login-left::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 15% 85%,rgba(255,255,255,.18) 0%,transparent 45%),
+             radial-gradient(circle at 85% 15%,rgba(255,255,255,.12) 0%,transparent 45%);
+}
+.login-brand{position:relative;max-width:420px;z-index:1}
+.brand-badge{
+  width:68px;height:68px;border-radius:20px;
+  background:rgba(255,255,255,.16);backdrop-filter:blur(10px);
+  display:grid;place-items:center;font-size:32px;font-weight:900;color:#fff;
+  border:2px solid rgba(255,255,255,.3);margin-bottom:26px;
+}
+.login-brand h1{font-size:40px;margin:0 0 12px;font-weight:900;letter-spacing:-1px}
+.brand-tag{font-size:17px;opacity:.92;margin:0 0 32px;line-height:1.5}
+.feature-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
+.feature-list li{display:flex;align-items:center;gap:12px;font-size:15px;opacity:.95}
+.feature-list li span{font-size:20px}
+
+.login-right{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 20px;background:var(--bg);gap:16px;
+}
+.login-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:42px 36px 32px;width:100%;max-width:380px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.login-logo{
+  text-align:center;font-size:30px;font-weight:900;
+  background:linear-gradient(135deg,var(--brand),#7c3aed,var(--brand2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:-1px;margin-bottom:28px;
+}
+.input-wrap{margin-bottom:10px}
+.login-card input{
+  width:100%;padding:13px 12px;font-size:14px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  transition:.15s;font:inherit;color:var(--ink);
+}
+.login-card input:focus{background:var(--panel);border-color:var(--brand);outline:none;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+.login-error{color:var(--bad);font-size:13px;text-align:center;margin:8px 0;display:none;font-weight:600}
+.login-btn{
+  width:100%;padding:12px;border-radius:8px;
+  background:linear-gradient(135deg,var(--brand),var(--brand2));
+  color:#fff;border:0;font-weight:800;font-size:14px;cursor:pointer;
+  margin-top:8px;transition:.15s;
+}
+.login-btn:hover{filter:brightness(1.08)}
+.login-hint{
+  text-align:center;font-size:12px;color:var(--muted);
+  margin-top:22px;padding-top:20px;border-top:1px solid var(--line);
+}
+.login-footer{font-size:12px;color:var(--muted);text-align:center}
+@media(max-width:800px){
+  .login-screen{grid-template-columns:1fr}
+  .login-left{display:none}
+}
+
+/* ============ APP ============ */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:232px;background:var(--sidebar);color:#cbd5e1;
+  padding:18px 12px;position:fixed;top:0;bottom:0;left:0;
+  overflow-y:auto;z-index:50;display:flex;flex-direction:column;
+}
+.sidebar h1{font-size:15px;color:#fff;margin:0 6px 22px;display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
+.sidebar h1 .logo{background:linear-gradient(135deg,var(--brand),#8b5cf6);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600;color:#cbd5e1;margin-bottom:3px;transition:.15s}
+.nav-item:hover{background:var(--sidebar2);color:#fff}
+.nav-item.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.35)}
+.nav-item .ico{width:20px;text-align:center;font-size:15px}
+.side-note{margin-top:20px;padding:12px;background:var(--sidebar2);border-radius:9px;font-size:11px;color:#94a3b8;line-height:1.5}
+.side-note b{color:#c7d2fe}
+.nav-logout{margin-top:auto;background:var(--sidebar2);color:#fca5a5}
+.nav-logout:hover{background:#7f1d1d;color:#fff}
+.user-info{margin-top:14px;padding:10px 12px;background:var(--sidebar2);border-radius:9px;font-size:12px;color:#cbd5e1;display:flex;align-items:center;gap:10px}
+.user-info .avatar-sm{width:34px;height:34px;flex-shrink:0;border-radius:50%;object-fit:cover;border:2px solid #475569;background:#475569;display:grid;place-items:center;font-size:15px;overflow:hidden}
+.user-info .avatar-sm img{width:100%;height:100%;object-fit:cover}
+.user-info .uname{font-weight:800;color:#fff;font-size:12.5px;word-break:break-all}
+.user-info .urole{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:1px 7px;border-radius:20px;margin-top:3px;display:inline-block}
+.user-info .urole.admin{background:#fef3c7;color:#b45309}
+.user-info .urole.user{background:#e0e7ff;color:#3730a3}
+
+.main{margin-left:232px;flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{background:var(--panel);border-bottom:1px solid var(--line);padding:13px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:40;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.topbar .title{font-size:17px;font-weight:800}
+.topbar .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.content{padding:24px;max-width:1330px;width:100%;margin:0 auto;flex:1}
+.view{display:none}
+.view.active{display:block}
+
+/* ============ GENERIC ============ */
+.card{background:var(--panel);border-radius:13px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--line)}
+.card.empty{color:var(--muted);text-align:center;padding:34px 18px}
+.card h2{font-size:12px;margin:0 0 14px;color:var(--brand);text-transform:uppercase;letter-spacing:.8px;font-weight:800}
+input,select,textarea{font:inherit;padding:9px 11px;border:1px solid var(--input-border);border-radius:9px;background:var(--input-bg);color:var(--ink);width:100%;transition:.15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(79,70,229,.14)}
+input:disabled{background:var(--panel2);color:var(--muted);cursor:not-allowed}
+select{cursor:pointer}
+textarea{resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+button{font:inherit;cursor:pointer;border-radius:9px;font-weight:700;padding:10px 16px;transition:.15s;white-space:nowrap;border:0}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 3px 10px rgba(79,70,229,.3)}
+button.primary:hover{filter:brightness(1.08)}
+button.ghost{background:var(--panel2);color:var(--ink2);border:1px solid var(--line2)}
+button.ghost:hover{background:var(--hover)}
+button.danger{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-bg)}
+button.danger:hover{filter:brightness(.95)}
+button.success{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bg)}
+button.small{padding:6px 11px;font-size:12px}
+button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hint{font-size:12px;color:var(--muted);line-height:1.5}
+.muted{color:var(--muted);font-weight:400}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.pill{display:inline-block;background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;vertical-align:middle;margin-left:6px}
+.pill.green{background:var(--ok-bg);color:var(--ok)}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:middle}
+th{background:var(--panel2);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink3)}
+td.num,th.num{text-align:center}
+tbody tr:hover{background:var(--hover)}
+
+/* ============ KPI ============ */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:16px}
+.kpi{background:var(--panel);border-radius:13px;padding:16px;border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative;overflow:hidden}
+.kpi .k{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.kpi .v{font-size:26px;font-weight:800;margin-top:6px;color:var(--ink)}
+.kpi .v small{font-size:14px;color:var(--muted);font-weight:600}
+.kpi .ico{position:absolute;right:14px;top:12px;font-size:22px;opacity:.25}
+.kpi.green .v{color:var(--ok)} .kpi.red .v{color:var(--bad)}
+.kpi.blue .v{color:var(--blue)} .kpi.amber .v{color:var(--warn)}
+
+/* ============ CHARTS ============ */
+.chart-toggle{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:9px}
+.chart-toggle button{border:0;background:transparent;padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12px;color:var(--muted)}
+.chart-toggle button.active{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.chart-svg{width:100%;height:auto;display:block}
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.chart-box{border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--panel2)}
+.chart-box-title{font-weight:800;font-size:12px;margin-bottom:4px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.pie-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;padding:10px}
+.pie-svg{width:200px;height:200px;flex-shrink:0}
+.pie-legend{display:flex;flex-direction:column;gap:10px;font-size:13px}
+.pie-legend-item{display:flex;align-items:center;gap:8px;color:var(--ink3)}
+.pie-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* ============ MINI PROGRESS ============ */
+.mini-prog-list{display:flex;flex-direction:column;gap:9px}
+.mini-prog-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.mini-label{width:96px;font-weight:700;color:var(--ink3);flex-shrink:0}
+.mini-track{flex:1;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.mini-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:3px;transition:.4s}
+.mini-fill.full{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.mini-count{width:60px;text-align:right;color:var(--muted);font-weight:700;font-size:11px;flex-shrink:0}
+
+/* ============ COMP TABS ============ */
+.comp-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.comp-tab{border:1px solid var(--line2);background:var(--panel2);padding:10px 15px;border-radius:11px;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink2);text-align:center;min-width:118px;transition:.15s}
+.comp-tab small{display:block;font-weight:600;color:var(--muted);margin-top:3px;font-size:11px}
+.comp-tab:hover{background:var(--hover)}
+.comp-tab.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(79,70,229,.3)}
+.comp-tab.active small{color:#e0e7ff}
+.comp-tab.done:not(.active){background:var(--ok-bg);border-color:var(--ok-bg);color:var(--ok)}
+.comp-tab.done:not(.active) small{color:var(--ok)}
+
+/* ============ ENTRY TBL ============ */
+.entry-tbl input{padding:6px 8px;font-size:13px;text-align:center;min-width:80px;font-weight:700}
+.entry-tbl td.cellin{padding:4px;text-align:center}
+.entry-tbl input.empty{background:var(--warn-bg);border-color:var(--warn)}
+.entry-tbl .conv-cell{font-weight:800;color:var(--brand);text-align:center;font-size:13px}
+.entry-tbl .total-cell{text-align:center;font-weight:800;color:#fff;font-size:14px;background:linear-gradient(135deg,var(--brand),var(--brand2))}
+.entry-tbl tr.filled td:first-child{box-shadow:inset 3px 0 0 var(--ok)}
+
+/* ============ BADGES ============ */
+.stat-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800}
+.stat-badge.pass{background:var(--ok-bg);color:var(--ok)}
+.stat-badge.fail{background:var(--bad-bg);color:var(--bad)}
+.stat-badge.abs{background:var(--panel2);color:var(--muted)}
+.band-chip{display:inline-block;background:var(--band-bg);color:var(--band-fg);font-size:10px;font-weight:800;padding:1px 6px;border-radius:8px;margin:1px}
+
+/* ============ BULK PREVIEW ============ */
+.preview-box{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:12px}
+.preview-box table{margin:0}
+.preview-box th{position:sticky;top:0;z-index:1}
+.row-ok{background:var(--ok-bg)}
+.row-bad{background:var(--bad-bg)}
+.row-warn{background:var(--warn-bg)}
+
+/* ============ BAND TABLE ============ */
+.band-tbl input{min-width:80px;padding:6px 8px;text-align:center}
+.band-tbl td{padding:5px 6px}
+
+/* ============ AVATAR ============ */
+.avatar-lg{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid var(--brand);cursor:pointer;display:grid;place-items:center;background:var(--panel2);font-size:30px;color:var(--muted);overflow:hidden;transition:.15s;flex-shrink:0}
+.avatar-lg:hover{border-color:var(--brand2);filter:brightness(1.05)}
+.avatar-lg img{width:100%;height:100%;object-fit:cover}
+.avatar-top{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--line2);background:var(--panel2);display:grid;place-items:center;font-size:15px;overflow:hidden;flex-shrink:0}
+.avatar-top img{width:100%;height:100%;object-fit:cover}
+
+/* ============ THEME PRESETS ============ */
+.theme-preset{width:44px;height:44px;border-radius:12px;cursor:pointer;border:3px solid transparent;transition:.15s;position:relative}
+.theme-preset:hover{transform:scale(1.06)}
+.theme-preset.active{border-color:var(--ink);box-shadow:0 0 0 2px var(--panel)}
+.theme-preset.active::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:900;font-size:18px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.mode-toggle{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:9px}
+.mode-toggle button{border:0;background:transparent;padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12px;color:var(--muted)}
+.mode-toggle button.active{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* ============ TOAST ============ */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(24px);background:#0f172a;color:#fff;padding:13px 24px;border-radius:11px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:900px){
+  .sidebar{width:64px;padding:14px 6px}
+  .sidebar h1{font-size:0;justify-content:center}
+  .sidebar h1 .logo{font-size:15px}
+  .nav-item{justify-content:center;padding:11px 0}
+  .nav-item .txt{display:none}
+  .user-info{justify-content:center;padding:8px}
+  .user-info > div:not(.avatar-sm){display:none}
+  .main{margin-left:64px}
+  .content{padding:16px}
+  .side-note{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-left">
+    <div class="login-brand">
+      <div class="brand-badge">M</div>
+      <h1>MarkDesk</h1>
+      <p class="brand-tag">Internal marks management, made simple for faculty.</p>
+      <ul class="feature-list">
+        <li><span>📊</span> Track CIA marks with automatic conversion</li>
+        <li><span>📥</span> Bulk upload from Excel or paste</li>
+        <li><span>📈</span> Real-time pass / fail statistics</li>
+        <li><span>🖨</span> One-click print mark lists</li>
+      </ul>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-card">
+      <div class="login-logo">MarkDesk</div>
+      <form onsubmit="event.preventDefault(); attemptLogin();">
+        <div class="input-wrap">
+          <input id="loginUser" type="text" placeholder="Username" autocomplete="username"
+                 oninput="document.getElementById('loginError').style.display='none'">
+        </div>
+        <div class="input-wrap">
+          <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"
+                 oninput="document.getElementById('loginError').style.display='none'">
+        </div>
+        <div id="loginError" class="login-error"></div>
+        <button type="submit" class="login-btn">Log In</button>
+      </form>
+      <div class="login-hint">Need an account? Contact your administrator.</div>
+    </div>
+    <div class="login-footer">Data stays in your browser · Your privacy is respected</div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="appScreen" class="app" style="display:none">
+  <aside class="sidebar">
+    <h1><span class="logo">M</span> MarkDesk</h1>
+    <div class="nav-item active" data-view="dashboard" onclick="nav('dashboard')"><span class="ico">📊</span><span class="txt">Dashboard</span></div>
+    <div class="nav-item" data-view="classes" onclick="nav('classes')"><span class="ico">🏫</span><span class="txt">Classes &amp; Students</span></div>
+    <div class="nav-item" data-view="entry" onclick="nav('entry')"><span class="ico">✍️</span><span class="txt">Mark Entry</span></div>
+    <div class="nav-item" data-view="bulk" onclick="nav('bulk')"><span class="ico">📥</span><span class="txt">Bulk Upload</span></div>
+    <div class="nav-item" data-view="stats" onclick="nav('stats')"><span class="ico">📈</span><span class="txt">Statistics</span></div>
+    <div class="nav-item" data-view="print" onclick="nav('print')"><span class="ico">🖨</span><span class="txt">Print &amp; Export</span></div>
+    <div class="nav-item" data-view="settings" id="navSettings" onclick="nav('settings')"><span class="ico">⚙️</span><span class="txt">Settings</span></div>
+    <div class="user-info" id="userInfo"></div>
+    <div class="nav-item nav-logout" onclick="logout()"><span class="ico">🚪</span><span class="txt">Logout</span></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="title" id="viewTitle">Dashboard</div>
+        <div class="sub" id="viewSub">Class overview</div>
+      </div>
+      <div class="row" style="gap:10px">
+        <select id="globalClassSel" onchange="changeGlobalClass(this.value)" style="min-width:240px"></select>
+        <button id="themeToggleBtn" class="ghost small" onclick="toggleTheme()" style="padding:8px 12px;font-size:16px" title="Toggle theme">🌙</button>
+        <div id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="content">
+      <section id="view-dashboard" class="view active"></section>
+      <section id="view-classes" class="view"></section>
+      <section id="view-entry" class="view"></section>
+      <section id="view-bulk" class="view"></section>
+      <section id="view-stats" class="view"></section>
+      <section id="view-print" class="view"></section>
+      <section id="view-settings" class="view"></section>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   SCHEME
+   ========================================================= */
+const SCHEME = {
+  I: {
+    label: '1st Year',
+    comps: [
+      { key:'cia1', label:'1st CIA',    rawMax:60, max:15,   conv:true  },
+      { key:'cia2', label:'2nd CIA',    rawMax:60, max:15,   conv:true  },
+      { key:'sem',  label:'Seminar',    rawMax:5,  max:5,    conv:false },
+      { key:'asg',  label:'Assignment', rawMax:5,  max:5,    conv:false }
+    ]
+  },
+  II: {
+    label: '2nd Year',
+    comps: [
+      { key:'cia1', label:'1st CIA',    rawMax:60, max:12.5, conv:true  },
+      { key:'att',  label:'Attendance', rawMax:5,  max:5,    conv:false },
+      { key:'cia2', label:'2nd CIA',    rawMax:60, max:12.5, conv:true  },
+      { key:'sem',  label:'Seminar',    rawMax:5,  max:5,    conv:false },
+      { key:'asg',  label:'Assignment', rawMax:5,  max:5,    conv:false }
+    ]
+  }
+};
+const INTERNAL_MAX = 40;
+
+const DEFAULT_BANDS = [
+  { min:90,  max:100,  val:90 },
+  { min:80,  max:89.99, val:80 },
+  { min:70,  max:79.99, val:70 },
+  { min:60,  max:69.99, val:60 },
+  { min:50,  max:59.99, val:50 },
+  { min:40,  max:49.99, val:40 },
+  { min:0,   max:39.99, val:0  }
+];
+
+/* =========================================================
+   THEME PRESETS
+   ========================================================= */
+const THEMES = {
+  indigo:  { name:'Indigo',  brand:'#4f46e5', brand2:'#6366f1', preview:'linear-gradient(135deg,#4f46e5,#6366f1)' },
+  blue:    { name:'Ocean',   brand:'#0284c7', brand2:'#0ea5e9', preview:'linear-gradient(135deg,#0284c7,#0ea5e9)' },
+  emerald: { name:'Emerald', brand:'#059669', brand2:'#10b981', preview:'linear-gradient(135deg,#059669,#10b981)' },
+  rose:    { name:'Rose',    brand:'#e11d48', brand2:'#f43f5e', preview:'linear-gradient(135deg,#e11d48,#f43f5e)' },
+  amber:   { name:'Amber',   brand:'#d97706', brand2:'#f59e0b', preview:'linear-gradient(135deg,#d97706,#f59e0b)' },
+  violet:  { name:'Violet',  brand:'#7c3aed', brand2:'#a855f7', preview:'linear-gradient(135deg,#7c3aed,#a855f7)' }
+};
+
+/* =========================================================
+   AUTH / USERS
+   ========================================================= */
+const USERS_KEY = 'markdesk_users';
+const SESSION_KEY = 'markdesk_session';
+const DEFAULT_USERS = [{ username: 'admin', password: 'admin123', role: 'admin' }];
+
+function seedUsers(){
+  if(!localStorage.getItem(USERS_KEY)){
+    localStorage.setItem(USERS_KEY, JSON.stringify(DEFAULT_USERS));
+  }
+}
+function getUsers(){
+  try{
+    const raw = localStorage.getItem(USERS_KEY);
+    if(raw){
+      const u = JSON.parse(raw);
+      if(Array.isArray(u) && u.length) return u;
+    }
+  }catch(e){}
+  return DEFAULT_USERS.map(x=>({...x}));
+}
+function saveUsers(users){ localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+function getSession(){
+  try{ return JSON.parse(sessionStorage.getItem(SESSION_KEY)); }catch(e){ return null; }
+}
+function isAdmin(){ const s = getSession(); return s && s.role === 'admin'; }
+function currentUser(){
+  const s = getSession(); if(!s) return null;
+  return getUsers().find(u=>u.username === s.username) || null;
+}
+
+function attemptLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const found = getUsers().find(x=>x.username === u && x.password === p);
+  if(found){
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ username: found.username, role: found.role }));
+    showApp();
+  }else{
+    const err = document.getElementById('loginError');
+    err.textContent = 'Incorrect username or password.';
+    err.style.display = 'block';
+  }
+}
+function logout(){
+  if(!confirm('Log out of MarkDesk?')) return;
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+function showLogin(){
+  document.getElementById('loginScreen').style.display = 'grid';
+  document.getElementById('appScreen').style.display = 'none';
+  setTimeout(()=>{ const el = document.getElementById('loginUser'); if(el) el.focus(); }, 50);
+}
+function showApp(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+  load();
+  applyTheme();
+  applyPermissions();
+  renderAll();
+}
+
+/* =========================================================
+   THEME HANDLING
+   ========================================================= */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  const t = THEMES[state.accent] || THEMES.indigo;
+  document.documentElement.style.setProperty('--brand', t.brand);
+  document.documentElement.style.setProperty('--brand2', t.brand2);
+  const btn = document.getElementById('themeToggleBtn');
+  if(btn) btn.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  save();
+  applyTheme();
+  renderAll();
+}
+function setThemeAccent(name){
+  if(!THEMES[name]) return;
+  state.accent = name;
+  save();
+  applyTheme();
+  renderSettings();
+  toast('Accent updated ✅');
+}
+function setThemeMode(mode){
+  if(mode !== 'light' && mode !== 'dark') return;
+  state.theme = mode;
+  save();
+  applyTheme();
+  renderSettings();
+}
+
+/* =========================================================
+   PROFILE PICTURE
+   ========================================================= */
+function uploadAvatar(input){
+  const f = input.files[0];
+  if(!f) return;
+  if(!f.type.startsWith('image/')){ alert('Please choose an image file.'); return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const size = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const s = getSession();
+      if(!s) return;
+      const users = getUsers();
+      const u = users.find(x=>x.username === s.username);
+      if(!u) return;
+      u.avatar = dataUrl;
+      saveUsers(users);
+      applyPermissions();
+      renderSettings();
+      toast('Photo updated ✅');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(f);
+  input.value = '';
+}
+function removeAvatar(){
+  const s = getSession(); if(!s) return;
+  if(!confirm('Remove profile photo?')) return;
+  const users = getUsers();
+  const u = users.find(x=>x.username === s.username);
+  if(!u) return;
+  delete u.avatar;
+  saveUsers(users);
+  applyPermissions();
+  renderSettings();
+  toast('Photo removed');
+}
+
+/* =========================================================
+   PERMISSIONS + SIDEBAR USER
+   ========================================================= */
+function applyPermissions(){
+  const s = getSession();
+  const user = currentUser();
+  const info = document.getElementById('userInfo');
+  if(s && info && user){
+    const avatarHtml = user.avatar
+      ? `<div class="avatar-sm"><img src="${user.avatar}" alt=""></div>`
+      : `<div class="avatar-sm">👤</div>`;
+    info.innerHTML = `${avatarHtml}
+      <div style="min-width:0">
+        <div class="uname">${esc(s.username)}</div>
+        <div class="urole ${s.role}">${s.role}</div>
+      </div>`;
+  }
+  // Topbar avatar
+  const topAv = document.getElementById('topbarAvatar');
+  if(topAv && user){
+    topAv.innerHTML = user.avatar
+      ? `<div class="avatar-top"><img src="${user.avatar}" alt=""></div>`
+      : `<div class="avatar-top">👤</div>`;
+  }
+  document.querySelectorAll('.nav-item[data-view]').forEach(n=>{
+    if(n.dataset.view === 'settings' && !isAdmin()) n.style.display = 'none';
+  });
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const STORE_KEY = 'markdesk_v3';
+const state = {
+  roundMode: '2',
+  classes: [],
+  activeClassId: null,
+  activeComp: null,
+  expandedClassId: null,
+  bulkClassId: null,
+  printType: 'all',
+  statsComp: null,
+  chartType: 'bar',
+  view: 'dashboard',
+  theme: 'light',
+  accent: 'indigo',
+  settings: {
+    bandsEnabled: true,
+    passPercent: 50,
+    bands: DEFAULT_BANDS.map(b=>({...b}))
+  }
+};
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function fmt(v){
+  if(v===null || v===undefined || v==='' || isNaN(v)) return '—';
+  return String(parseFloat(Number(v).toFixed(2)));
+}
+function roundMarks(v){
+  if(state.roundMode === '0.5') return Math.round(v*2)/2;
+  if(state.roundMode === '1')   return Math.round(v);
+  return Math.round(v*100)/100;
+}
+function hasMark(v){ return v !== '' && v !== null && v !== undefined && !isNaN(v); }
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(s && Array.isArray(s.classes)){
+      state.classes = s.classes;
+      state.roundMode = s.roundMode || '2';
+      state.activeClassId = s.activeClassId || null;
+      state.activeComp = s.activeComp || null;
+      state.printType = s.printType || 'all';
+      state.statsComp = s.statsComp || null;
+      state.chartType = s.chartType || 'bar';
+      state.theme = s.theme || 'light';
+      state.accent = s.accent || 'indigo';
+      state.settings = Object.assign({
+        bandsEnabled: true, passPercent: 50,
+        bands: DEFAULT_BANDS.map(b=>({...b}))
+      }, s.settings || {});
+      if(!Array.isArray(state.settings.bands) || !state.settings.bands.length)
+        state.settings.bands = DEFAULT_BANDS.map(b=>({...b}));
+      state.classes.forEach(c=>{
+        c.students = c.students || [];
+        c.students.forEach(st=>{ st.marks = st.marks || {}; });
+      });
+    }
+  }catch(e){}
+}
+function activeClass(){ return state.classes.find(c=>c.id===state.activeClassId) || null; }
+
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2300);
+}
+
+/* =========================================================
+   CONVERSION ENGINE
+   ========================================================= */
+function findBand(pctVal){
+  if(!state.settings.bandsEnabled) return null;
+  for(const b of state.settings.bands){
+    if(pctVal >= b.min && pctVal <= b.max) return b;
+  }
+  return null;
+}
+function scaleTo100(cp, raw){
+  if(!hasMark(raw)) return null;
+  const n = Math.min(Math.max(Number(raw),0), cp.rawMax);
+  return n / cp.rawMax * 100;
+}
+function bandValue(pctVal){
+  const b = findBand(pctVal);
+  return b ? b.val : null;
+}
+function compInternal(cp, raw){
+  if(!hasMark(raw)) return null;
+  const n = Math.min(Math.max(Number(raw),0), cp.rawMax);
+  if(!cp.conv) return roundMarks(n);
+  let p = n / cp.rawMax * 100;
+  if(state.settings.bandsEnabled){
+    const b = findBand(p);
+    if(b) p = b.val;
+  }
+  return roundMarks(p / 100 * cp.max);
+}
+function calc(cls, st){
+  const scheme = SCHEME[cls.year];
+  const res = { comps:{}, internal:0, filled:0, complete:false };
+  let sum = 0, filled = 0;
+  scheme.comps.forEach(cp=>{
+    const v = compInternal(cp, st.marks[cp.key]);
+    res.comps[cp.key] = v;
+    if(v !== null){ sum += v; filled++; }
+  });
+  res.filled = filled;
+  res.complete = (filled === scheme.comps.length);
+  res.internal = Math.round(sum*100)/100;
+  return res;
+}
+function compStats(cls, cp){
+  let appeared=0, pass=0, fail=0;
+  cls.students.forEach(s=>{
+    const raw = s.marks[cp.key];
+    if(!hasMark(raw)) return;
+    appeared++;
+    if(Number(raw)/cp.rawMax*100 >= state.settings.passPercent) pass++; else fail++;
+  });
+  return { appeared, pass, fail, passPct: appeared ? (pass/appeared*100) : 0 };
+}
+
+/* ---- OVERALL CIA: count each student once ---- */
+function overallCiaStats(cls){
+  const scheme = SCHEME[cls.year];
+  const ciaComps = scheme.comps.filter(cp=>cp.conv);
+  const threshold = state.settings.passPercent;
+  let appeared=0, pass=0, fail=0;
+  const failedStudents = [];
+  cls.students.forEach(s=>{
+    const tookAny = ciaComps.some(cp=>hasMark(s.marks[cp.key]));
+    if(!tookAny) return;
+    appeared++;
+    let allPassed = true;
+    ciaComps.forEach(cp=>{
+      const raw = s.marks[cp.key];
+      if(!hasMark(raw)) return; // skip not-taken
+      if((Number(raw)/cp.rawMax*100) < threshold) allPassed = false;
+    });
+    if(allPassed) pass++;
+    else { fail++; failedStudents.push(s); }
+  });
+  return {
+    appeared, pass, fail, failedStudents,
+    passPct: appeared ? (pass/appeared*100) : 0
+  };
+}
+
+function getBandDistribution(cls, cp){
+  if(!cp.conv || !state.settings.bandsEnabled) return null;
+  const dist = {};
+  state.settings.bands.forEach(b=>{ dist[b.val] = 0; });
+  cls.students.forEach(s=>{
+    const raw = s.marks[cp.key];
+    if(!hasMark(raw)) return;
+    const pct = Number(raw) / cp.rawMax * 100;
+    const b = findBand(pct);
+    if(b) dist[b.val] = (dist[b.val] || 0) + 1;
+  });
+  return dist;
+}
+
+/* =========================================================
+   NAV
+   ========================================================= */
+const VIEW_TITLES = {
+  dashboard:['Dashboard','Class overview'],
+  classes:['Classes & Students','Add classes, students, bulk import'],
+  entry:['Mark Entry','Component-wise mark entry'],
+  bulk:['Bulk Upload','Paste from Excel / CSV'],
+  stats:['Statistics','Appeared / Pass / Fail / Pass %'],
+  print:['Print & Export','Mark lists & log book'],
+  settings:['Settings','Account, theme, conversion bands & users']
+};
+function nav(v){
+  if(v === 'settings' && !isAdmin()){ v = 'dashboard'; }
+  state.view = v;
+  document.querySelectorAll('.nav-item[data-view]').forEach(n=>n.classList.toggle('active', n.dataset.view===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active', s.id==='view-'+v));
+  document.getElementById('viewTitle').textContent = VIEW_TITLES[v][0];
+  document.getElementById('viewSub').textContent   = VIEW_TITLES[v][1];
+  renderAll();
+  save();
+  window.scrollTo({top:0});
+}
+function changeGlobalClass(id){
+  state.activeClassId = id;
+  const c = activeClass();
+  state.activeComp = c ? SCHEME[c.year].comps[0].key : null;
+  state.statsComp  = c ? SCHEME[c.year].comps[0].key : null;
+  state.expandedClassId = null;
+  save(); renderAll();
+}
+
+/* =========================================================
+   CHARTS — SMALLER CATEGORY BARS
+   ========================================================= */
+function setChartType(t){ state.chartType = t; save(); renderDashboard(); }
+
+function getChartCategories(year){
+  const cats = [
+    { label:'Assignment', comps:['asg'],         icon:'📝' },
+    { label:'Seminar',    comps:['sem'],         icon:'🎤' },
+    { label:'CIA',        comps:['cia1','cia2'], icon:'📊' }
+  ];
+  if(year === 'II') cats.push({ label:'Attendance', comps:['att'], icon:'📋' });
+  return cats;
+}
+
+function renderCategoryBarChart(c, category){
+  const scheme = SCHEME[c.year];
+  const comps = category.comps.map(k=>scheme.comps.find(x=>x.key===k)).filter(Boolean);
+  if(!comps.length) return '<div class="hint">No components</div>';
+
+  const data = comps.map(cp=>{
+    const st = compStats(c, cp);
+    return { label: cp.label, passPct: st.passPct, pass: st.pass, appeared: st.appeared };
+  });
+
+  // Compact chart
+  const W = 300, H = 140;
+  const PAD_L = 32, PAD_R = 10, PAD_T = 25, PAD_B = 34;
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+  const gap = 18;
+
+  const computedBarW = data.length > 0 ? (innerW - gap*(data.length-1)) / data.length : innerW;
+  const barW = Math.min(38, computedBarW);
+  const totalBarW = barW * data.length + gap * (data.length - 1);
+  const startX = PAD_L + (innerW - totalBarW) / 2;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" preserveAspectRatio="xMidYMid meet">`;
+  // gridlines
+  for(let p=0; p<=100; p+=25){
+    const y = PAD_T + innerH - (p/100)*innerH;
+    svg += `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    svg += `<text x="${PAD_L-5}" y="${y+3}" text-anchor="end" font-size="8" fill="var(--muted)">${p}%</text>`;
+  }
+  data.forEach((d,i)=>{
+    const x = startX + i*(barW+gap);
+    const h = (d.passPct/100)*innerH;
+    const y = PAD_T + innerH - h;
+    const color = d.appeared === 0 ? 'var(--line2)'
+                : d.passPct >= 60 ? '#22c55e'
+                : d.passPct >= 40 ? '#f59e0b' : '#ef4444';
+    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,2)}" fill="${color}" rx="3"/>`;
+    if(d.appeared > 0){
+      svg += `<text x="${x+barW/2}" y="${y-6}" text-anchor="middle" font-size="10" font-weight="800" fill="var(--ink)">${d.passPct.toFixed(0)}%</text>`;
+    }
+    svg += `<text x="${x+barW/2}" y="${H-PAD_B+14}" text-anchor="middle" font-size="9.5" fill="var(--ink3)" font-weight="700">${esc(d.label)}</text>`;
+    svg += `<text x="${x+barW/2}" y="${H-PAD_B+25}" text-anchor="middle" font-size="8.5" fill="var(--muted)">${d.pass}/${d.appeared}</text>`;
+  });
+  svg += `<line x1="${PAD_L}" y1="${PAD_T+innerH}" x2="${W-PAD_R}" y2="${PAD_T+innerH}" stroke="var(--muted)" stroke-width="1"/>`;
+  svg += `<line x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${PAD_T+innerH}" stroke="var(--muted)" stroke-width="1"/>`;
+  svg += `</svg>`;
+  return svg;
+}
+
+function renderCategoryCharts(c){
+  const cats = getChartCategories(c.year);
+  return `<div class="chart-grid">${cats.map(cat=>`
+    <div class="chart-box">
+      <div class="chart-box-title">${cat.icon} ${esc(cat.label)}</div>
+      ${renderCategoryBarChart(c, cat)}
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderPieChart(c){
+  if(!c.students.length) return '<div class="card empty">No students yet.</div>';
+  const threshold = (state.settings.passPercent/100)*INTERNAL_MAX;
+  let pass=0, fail=0, incomplete=0;
+  c.students.forEach(s=>{
+    const r = calc(c, s);
+    if(!r.complete){ incomplete++; return; }
+    if(r.internal >= threshold) pass++; else fail++;
+  });
+  const total = c.students.length;
+  const R = 78, CX = 100, CY = 100, STROKE = 36;
+  const C = 2*Math.PI*R;
+  const segs = [];
+  if(pass>0) segs.push({count:pass, color:'#22c55e'});
+  if(fail>0) segs.push({count:fail, color:'#ef4444'});
+  if(incomplete>0) segs.push({count:incomplete, color:'#cbd5e1'});
+
+  let offset = 0;
+  let svg = `<svg viewBox="0 0 200 200" class="pie-svg">`;
+  segs.forEach(seg=>{
+    const len = (seg.count/total)*C;
+    svg += `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="${STROKE}"
+      stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-offset}"
+      transform="rotate(-90 ${CX} ${CY})"/>`;
+    offset += len;
+  });
+  const passPct = ((pass/total)*100).toFixed(0);
+  svg += `<text x="${CX}" y="${CY-2}" text-anchor="middle" font-size="26" font-weight="800" fill="var(--ink)">${passPct}%</text>`;
+  svg += `<text x="${CX}" y="${CY+18}" text-anchor="middle" font-size="11" fill="var(--muted)" font-weight="600">Pass Rate</text>`;
+  svg += `</svg>`;
+
+  const legend = [
+    {label:'Pass',       count:pass,       color:'#22c55e'},
+    {label:'Fail',       count:fail,       color:'#ef4444'},
+    {label:'Incomplete', count:incomplete, color:'#cbd5e1'}
+  ].filter(x=>x.count>0).map(x=>`
+    <div class="pie-legend-item">
+      <span class="pie-dot" style="background:${x.color}"></span>
+      <span>${x.label}: <b style="color:var(--ink)">${x.count}</b> (${((x.count/total)*100).toFixed(0)}%)</span>
+    </div>`).join('');
+
+  return `<div class="pie-wrap">${svg}<div class="pie-legend">${legend}</div></div>`;
+}
+
+/* ---------- PRINT CHARTS ---------- */
+function printCharts(){
+  const c = activeClass();
+  if(!c){ alert('Please select a class first.'); return; }
+  if(!c.students.length){ alert('This class has no students.'); return; }
+
+  let bodyContent, titleText;
+  if(state.chartType === 'pie'){
+    bodyContent = `<div style="display:flex;justify-content:center;padding:30px 0">${renderPieChart(c)}</div>`;
+    titleText = 'Overall Performance';
+  }else{
+    const cats = getChartCategories(c.year);
+    bodyContent = `<div class="chart-grid">${cats.map(cat=>`
+      <div class="print-chart">
+        <div class="chart-title">${cat.icon} ${esc(cat.label)}</div>
+        ${renderCategoryBarChart(c, cat)}
+      </div>
+    `).join('')}</div>`;
+    titleText = 'Component-wise Performance Charts';
+  }
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>${esc(c.name)} — Performance Charts</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    *{box-sizing:border-box}
+    body { font-family: Arial, Helvetica, sans-serif; padding: 20px; margin: 0; color:#0f172a; background:#fff; }
+    .topbar { position: sticky; top: 0; background: #f1f5f9; padding: 10px; display: flex; gap: 10px; justify-content: flex-end; border-bottom: 1px solid #cbd5e1; margin-bottom: 20px; }
+    .topbar button { padding: 9px 18px; border-radius: 6px; border: 1px solid #94a3b8; background: #fff; cursor: pointer; font-weight: 700; font-size: 14px; }
+    .topbar button:first-child { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    .phead { text-align: center; margin-bottom: 22px; }
+    .phead .cname { font-size: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; }
+    .phead .csub { font-size: 13px; margin-top: 4px; color: #475569; }
+    .phead .ptitle { font-size: 15px; font-weight: bold; margin-top: 10px; text-decoration: underline; }
+    .chart-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .print-chart { border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; page-break-inside: avoid; }
+    .chart-title { font-weight: 800; font-size: 14px; margin-bottom: 10px; color: #334155; }
+    .chart-svg { width: 100%; height: auto; max-height: 180px; display: block; }
+    .pie-svg { width: 220px; height: 220px; }
+    .pie-wrap { display: flex; align-items: center; gap: 30px; justify-content: center; }
+    .pie-legend { display: flex; flex-direction: column; gap: 12px; font-size: 14px; color:#475569; }
+    .pie-legend-item { display: flex; align-items: center; gap: 8px; }
+    .pie-dot { width: 14px; height: 14px; border-radius: 3px; }
+    .chart-svg text { fill: #0f172a; }
+    .chart-svg line { stroke: #e2e8f0; }
+    @media print { .topbar { display: none; } body { padding: 0; } }
+  </style></head><body>
+    <div class="topbar">
+      <button onclick="window.print()">🖨 Print</button>
+      <button onclick="window.close()">✕ Close</button>
+    </div>
+    <div class="phead">
+      <div class="cname">${esc(c.name)}</div>
+      <div class="csub">Subject: ${esc(c.subject||'—')} &nbsp;|&nbsp; ${SCHEME[c.year].label} &nbsp;|&nbsp; Total Students: ${c.students.length}</div>
+      <div class="ptitle">${titleText}</div>
+    </div>
+    ${bodyContent}
+    <script>window.addEventListener('load',function(){setTimeout(function(){try{window.print()}catch(e){}},400)});<\/script>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  if(!w){ alert('Pop-up blocked. Please allow pop-ups.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+function renderDashboard(){
+  const el = document.getElementById('view-dashboard');
+  const c = activeClass();
+
+  if(!state.classes.length){
+    el.innerHTML = `<div class="card empty">
+      <div style="font-size:42px;margin-bottom:10px">🏫</div>
+      <div style="font-weight:800;font-size:16px;color:var(--ink);margin-bottom:6px">Welcome to MarkDesk</div>
+      <p class="hint" style="margin-bottom:16px">Add a class to get started.</p>
+      <button class="primary" onclick="nav('classes')">+ Add Your First Class</button>
+    </div>`;
+    return;
+  }
+  if(!c){ el.innerHTML = '<div class="card empty">Please select a class.</div>'; return; }
+
+  const scheme = SCHEME[c.year];
+  const total = c.students.length;
+  let fullCount = 0, sumInternal = 0, sumCount = 0;
+  c.students.forEach(s=>{
+    const r = calc(c, s);
+    if(r.complete) fullCount++;
+    if(r.filled > 0){ sumInternal += r.internal; sumCount++; }
+  });
+  const avgInternal = sumCount ? (sumInternal/sumCount) : 0;
+  const oc = overallCiaStats(c);
+
+  const chartHtml = state.chartType === 'pie' ? renderPieChart(c) : renderCategoryCharts(c);
+
+  const miniProgs = scheme.comps.map(cp=>{
+    const done = c.students.filter(s=>hasMark(s.marks[cp.key])).length;
+    const p = total ? (done/total*100) : 0;
+    return `<div class="mini-prog-row">
+      <span class="mini-label">${esc(cp.label)}</span>
+      <div class="mini-track"><div class="mini-fill ${done===total?'full':''}" style="width:${p}%"></div></div>
+      <span class="mini-count">${done}/${total}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="kpis">
+      <div class="kpi blue"><div class="ico">👥</div><div class="k">Total Students</div><div class="v">${total}</div></div>
+      <div class="kpi green"><div class="ico">✅</div><div class="k">Fully Entered</div><div class="v">${fullCount}<small>/${total}</small></div></div>
+      <div class="kpi"><div class="ico">📊</div><div class="k">Avg Internal</div><div class="v">${sumCount?fmt(avgInternal):'—'}<small>/40</small></div></div>
+      <div class="kpi ${oc.passPct>=60?'green':oc.passPct>=40?'amber':'red'}"><div class="ico">🎯</div><div class="k">CIA Pass %</div><div class="v">${oc.appeared?oc.passPct.toFixed(1):'—'}<small>%</small></div></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0">Performance Overview</h2>
+        <div class="row" style="gap:8px">
+          <div class="chart-toggle">
+            <button class="${state.chartType==='bar'?'active':''}" onclick="setChartType('bar')">📊 Bar</button>
+            <button class="${state.chartType==='pie'?'active':''}" onclick="setChartType('pie')">🥧 Pie</button>
+          </div>
+          <button class="ghost small" onclick="printCharts()">🖨 Print Charts</button>
+        </div>
+      </div>
+      <div style="padding:6px 0">${chartHtml}</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:10px">Component Status</h2>
+      <div class="mini-prog-list">${miniProgs}</div>
+    </div>
+
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <div class="row">
+        <button class="primary" onclick="nav('entry')">✍️ Enter Marks</button>
+        <button class="ghost" onclick="nav('bulk')">📥 Bulk Upload</button>
+        <button class="ghost" onclick="nav('stats')">📈 Statistics</button>
+        <button class="ghost" onclick="nav('print')">🖨 Print Lists</button>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   CLASSES & STUDENTS
+   ========================================================= */
+function renderClasses(){
+  const el = document.getElementById('view-classes');
+  let html = `<div class="card">
+      <h2>Add New Class</h2>
+      <div class="row">
+        <input id="clsName" placeholder="Class name (e.g. II B.Sc CS - A)" style="flex:2;min-width:220px">
+        <select id="clsYear" style="flex:2;min-width:300px">
+          <option value="II">2nd Year — 1st CIA 12.5 | Att 5 | 2nd CIA 12.5 | Sem 5 | Asg 5</option>
+          <option value="I">1st Year — 1st CIA 15 | 2nd CIA 15 | Sem 5 | Asg 5</option>
+        </select>
+        <input id="clsSubject" placeholder="Subject (optional)" style="flex:1;min-width:150px">
+        <button class="primary" onclick="addClass()">+ Add Class</button>
+      </div>
+    </div>`;
+
+  if(!state.classes.length){
+    html += '<div class="card empty">No classes yet.</div>';
+  }else{
+    html += state.classes.map(classCardHTML).join('');
+  }
+
+  html += `<div class="card">
+      <h2>Backup / Restore</h2>
+      <div class="row">
+        <button class="ghost" onclick="backup()">⬇ Backup (JSON)</button>
+        ${isAdmin() ? `
+          <button class="ghost" onclick="document.getElementById('restoreFile').click()">⬆ Restore</button>
+          <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restore(this)">
+          <button class="danger" onclick="resetAll()">Delete All Data</button>
+        ` : '<span class="hint">Restore & reset are restricted to administrators.</span>'}
+      </div>
+    </div>`;
+
+  el.innerHTML = html;
+}
+
+function classCardHTML(c){
+  const open = state.expandedClassId === c.id;
+  const scheme = SCHEME[c.year];
+  return `<div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:800">${esc(c.name)}<span class="pill">${scheme.label}</span></div>
+        <div class="hint" style="margin-top:3px">${esc(c.subject||'—')} • ${c.students.length} students</div>
+      </div>
+      <div class="row">
+        <button class="ghost" onclick="toggleClass('${c.id}')">${open?'▲ Close':'▼ Students'}</button>
+        <button class="primary" onclick="openEntry('${c.id}')">Mark Entry ➜</button>
+        ${isAdmin() ? `<button class="danger" onclick="delClass('${c.id}')">Delete</button>` : ''}
+      </div>
+    </div>
+    ${open ? studentPanelHTML(c) : ''}
+  </div>`;
+}
+
+function studentPanelHTML(c){
+  const bulkOpen = state.bulkClassId === c.id;
+  const rows = c.students.map((s,i)=>`
+    <tr>
+      <td class="num">${i+1}</td>
+      <td>${esc(s.reg || '—')}</td>
+      <td>${esc(s.name)}</td>
+      <td>${isAdmin() ? `<button class="danger small" onclick="delStudent('${c.id}','${s.id}')">Remove</button>` : '<span class="muted">—</span>'}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No students yet</td></tr>';
+
+  return `<div class="divider"></div>
+  <div class="row">
+    <input id="newReg_${c.id}" placeholder="Register No" style="width:170px" onkeydown="if(event.key==='Enter')document.getElementById('newName_${c.id}').focus()">
+    <input id="newName_${c.id}" placeholder="Student Name" style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')addStudent('${c.id}')">
+    <button class="primary" onclick="addStudent('${c.id}')">+ Add Student</button>
+    <button class="ghost" onclick="toggleBulk('${c.id}')">📋 Bulk Add</button>
+  </div>
+  <div style="display:${bulkOpen?'block':'none'};margin-top:10px">
+    <textarea id="bulkText_${c.id}" rows="5" placeholder="One student per line:&#10;21CS001, Arun Kumar&#10;21CS002, Priya S&#10;(comma / tab / 2 spaces supported)"></textarea>
+    <button class="primary" style="margin-top:8px" onclick="bulkAdd('${c.id}')">Add All Students</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:55px">#</th><th style="width:170px">Reg No</th><th>Name</th><th style="width:110px">Action</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function addClass(){
+  const name = document.getElementById('clsName').value.trim();
+  const year = document.getElementById('clsYear').value;
+  const subject = document.getElementById('clsSubject').value.trim();
+  if(!name){ alert('Class name is required.'); return; }
+  const c = { id: uid(), name, year, subject, students: [] };
+  state.classes.push(c);
+  state.expandedClassId = c.id;
+  if(!state.activeClassId) state.activeClassId = c.id;
+  state.activeComp = SCHEME[year].comps[0].key;
+  state.statsComp  = SCHEME[year].comps[0].key;
+  document.getElementById('clsName').value = '';
+  document.getElementById('clsSubject').value = '';
+  save(); renderAll();
+  toast('Class added ✅');
+}
+function delClass(id){
+  if(!isAdmin()){ alert('Only administrators can delete classes.'); return; }
+  const c = state.classes.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`Delete "${c.name}" and its ${c.students.length} students?`)) return;
+  state.classes = state.classes.filter(x=>x.id!==id);
+  if(state.activeClassId === id) state.activeClassId = state.classes[0] ? state.classes[0].id : null;
+  if(state.expandedClassId === id) state.expandedClassId = null;
+  save(); renderAll();
+}
+function toggleClass(id){ state.expandedClassId = (state.expandedClassId===id)?null:id; renderClasses(); }
+function toggleBulk(id){ state.bulkClassId = (state.bulkClassId===id)?null:id; renderClasses(); }
+
+function addStudent(cid){
+  const c = state.classes.find(x=>x.id===cid); if(!c) return;
+  const regEl = document.getElementById('newReg_'+cid);
+  const nameEl = document.getElementById('newName_'+cid);
+  const reg = regEl.value.trim(), name = nameEl.value.trim();
+  if(!reg || !name){ alert('Register number and name are required.'); return; }
+  c.students.push({ id: uid(), reg, name, marks: {} });
+  regEl.value=''; nameEl.value='';
+  save(); renderAll();
+  const r2 = document.getElementById('newReg_'+cid); if(r2) r2.focus();
+}
+function delStudent(cid, sid){
+  if(!isAdmin()){ alert('Only administrators can remove students.'); return; }
+  const c = state.classes.find(x=>x.id===cid); if(!c) return;
+  const s = c.students.find(x=>x.id===sid); if(!s) return;
+  if(!confirm(`Remove "${s.name}"?`)) return;
+  c.students = c.students.filter(x=>x.id!==sid);
+  save(); renderAll();
+}
+function bulkAdd(cid){
+  const c = state.classes.find(x=>x.id===cid); if(!c) return;
+  const txt = document.getElementById('bulkText_'+cid).value;
+  let added = 0;
+  txt.split(/\r?\n/).forEach(line=>{
+    const t = line.trim(); if(!t) return;
+    let parts = t.split(/\t|,|;|\s{2,}/).map(x=>x.trim()).filter(Boolean);
+    if(parts.length < 2){
+      const m = t.match(/^(\S+)\s+(.+)$/); if(m) parts=[m[1],m[2]];
+    }
+    if(parts.length >= 2){
+      c.students.push({ id: uid(), reg: parts[0], name: parts.slice(1).join(' '), marks: {} });
+      added++;
+    }else if(parts.length === 1){
+      c.students.push({ id: uid(), reg:'', name: parts[0], marks: {} }); added++;
+    }
+  });
+  document.getElementById('bulkText_'+cid).value = '';
+  state.bulkClassId = null;
+  save(); renderAll();
+  toast(added + ' students added ✅');
+}
+function openEntry(cid){
+  state.activeClassId = cid;
+  const c = activeClass();
+  state.activeComp = c ? SCHEME[c.year].comps[0].key : null;
+  save(); nav('entry');
+}
+
+/* =========================================================
+   ENTRY
+   ========================================================= */
+function setActiveComp(key){ state.activeComp = key; save(); renderEntry(); }
+function nextComp(){
+  const c = activeClass(); if(!c) return;
+  const keys = SCHEME[c.year].comps.map(x=>x.key);
+  const i = keys.indexOf(state.activeComp);
+  if(i > -1 && i < keys.length-1){ setActiveComp(keys[i+1]); toast('Next component ➜'); }
+  else toast('Last component reached.');
+}
+function prevComp(){
+  const c = activeClass(); if(!c) return;
+  const keys = SCHEME[c.year].comps.map(x=>x.key);
+  const i = keys.indexOf(state.activeComp);
+  if(i > 0){ setActiveComp(keys[i-1]); toast('◀ Previous component'); }
+}
+function focusActiveCompFirst(){
+  const el = document.querySelector('#view-entry input[data-key]');
+  if(el){ el.focus(); el.select(); }
+}
+function renderEntry(){
+  const el = document.getElementById('view-entry');
+  const c = activeClass();
+  if(!state.classes.length){ el.innerHTML = '<div class="card empty">Please add a class first.</div>'; return; }
+  if(!c){ el.innerHTML = '<div class="card empty">Please select a class.</div>'; return; }
+  const scheme = SCHEME[c.year];
+  if(!scheme.comps.some(x=>x.key===state.activeComp))
+    state.activeComp = scheme.comps[0].key;
+  if(!c.students.length){
+    el.innerHTML = `<div class="card empty">This class has no students.<br><br>
+      <button class="primary" onclick="nav('classes')">+ Add Students</button></div>`;
+    return;
+  }
+  const tabs = scheme.comps.map(cp=>{
+    const done = c.students.filter(s=>hasMark(s.marks[cp.key])).length;
+    const isDone = done === c.students.length;
+    const cls = 'comp-tab' + (state.activeComp===cp.key?' active':'') + (isDone?' done':'');
+    return `<button class="${cls}" onclick="setActiveComp('${cp.key}')">
+      ${esc(cp.label)}<small>${done}/${c.students.length}${isDone?' ✓':''}</small>
+    </button>`;
+  }).join('');
+  const cp = scheme.comps.find(x=>x.key===state.activeComp);
+  const hasNext = scheme.comps.indexOf(cp) < scheme.comps.length-1;
+
+  let head = `<tr>
+    <th style="width:45px">#</th>
+    <th style="width:120px">Reg No</th>
+    <th style="min-width:170px">Name</th>
+    <th style="width:110px" class="num">${cp.label}<br><small>/${cp.rawMax}</small></th>
+    ${cp.conv?`<th style="width:110px" class="num">Converted<br><small>/${cp.max}</small></th>`:''}
+    <th style="width:110px" class="num">Internal<br><small>/40</small></th></tr>`;
+
+  const rows = c.students.map((s,i)=>{
+    const r = calc(c,s);
+    const raw = s.marks[cp.key];
+    const filled = hasMark(raw);
+    let cells = `<td class="num">${i+1}</td>
+      <td>${esc(s.reg || '—')}</td>
+      <td>${esc(s.name)}</td>
+      <td class="cellin">
+        <input type="number" inputmode="decimal" step="0.01" min="0" max="${cp.rawMax}"
+               class="${filled?'':'empty'}" value="${filled?raw:''}"
+               data-sid="${s.id}" data-key="${cp.key}"
+               oninput="onCompInput(this)" onkeydown="onCompKey(event,this)" onfocus="this.select()">
+      </td>`;
+    if(cp.conv) cells += `<td class="conv-cell" id="cv_${s.id}">${fmt(r.comps[cp.key])}</td>`;
+    cells += `<td class="total-cell" id="int_${s.id}">${fmt(r.internal)}</td>`;
+    return `<tr class="${filled?'filled':''}">${cells}</tr>`;
+  }).join('');
+  const doneCount = c.students.filter(s=>hasMark(s.marks[cp.key])).length;
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-size:16px;font-weight:800">${esc(c.name)}</div>
+          <div class="hint">${esc(c.subject||'—')} • ${scheme.label} • ${c.students.length} students</div>
+        </div>
+        <div class="hint">${cp.label}: <b>${doneCount}/${c.students.length}</b> entered</div>
+      </div>
+      <div class="comp-tabs">${tabs}</div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="entry-tbl">
+          <thead>${head}</thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:14px;justify-content:space-between">
+        <span class="hint">Press Enter to move to the next student. Enter on the last student moves to the next component.</span>
+        <div class="row">
+          <button class="ghost" onclick="prevComp()">◀ Prev</button>
+          ${hasNext?`<button class="primary" onclick="nextComp()">Next Component ➜</button>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+function onCompInput(el){
+  const c = activeClass(); if(!c) return;
+  const s = c.students.find(x=>x.id===el.dataset.sid); if(!s) return;
+  const key = el.dataset.key;
+  s.marks[key] = (el.value==='') ? '' : Number(el.value);
+  save();
+  const cp = SCHEME[c.year].comps.find(x=>x.key===key);
+  const r = calc(c,s);
+  if(cp.conv){
+    const cvEl = document.getElementById('cv_'+s.id); if(cvEl) cvEl.textContent = fmt(r.comps[key]);
+  }
+  const intEl = document.getElementById('int_'+s.id); if(intEl) intEl.textContent = fmt(r.internal);
+  el.classList.toggle('empty', !hasMark(el.value));
+  const tr = el.closest('tr'); if(tr) tr.classList.toggle('filled', hasMark(el.value));
+}
+function onCompKey(e, el){
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const inputs = Array.from(document.querySelectorAll('#view-entry input[data-key]'));
+  const i = inputs.indexOf(el);
+  if(i > -1 && i < inputs.length-1){
+    const n = inputs[i+1]; n.focus(); n.select();
+    n.scrollIntoView({block:'center', behavior:'smooth'});
+  }else{
+    const c = activeClass(); if(!c) return;
+    const scheme = SCHEME[c.year];
+    const cp = scheme.comps.find(x=>x.key===state.activeComp);
+    const idx = scheme.comps.indexOf(cp);
+    if(idx < scheme.comps.length-1){
+      setActiveComp(scheme.comps[idx+1].key);
+      toast('Next component ➜ '+scheme.comps[idx+1].label);
+      setTimeout(focusActiveCompFirst, 60);
+    }else toast('All marks entered ✅');
+  }
+}
+
+/* =========================================================
+   BULK UPLOAD
+   ========================================================= */
+let bulkPreview = null;
+function renderBulk(){
+  const el = document.getElementById('view-bulk');
+  const c = activeClass();
+  if(!c){ el.innerHTML = '<div class="card empty">Please select a class.</div>'; return; }
+  const scheme = SCHEME[c.year];
+  const compOpts = scheme.comps.map(cp=>
+    `<option value="${cp.key}">${cp.label} (max ${cp.rawMax})</option>`).join('');
+
+  el.innerHTML = `
+    <div class="card">
+      <h2>Bulk Mark Upload — ${esc(c.name)}</h2>
+      <div class="row" style="margin-bottom:14px">
+        <div style="flex:1;min-width:220px">
+          <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">Upload Mode</label>
+          <select id="bulkMode" onchange="renderBulk()">
+            <option value="single">Single Component</option>
+            <option value="full">Full Sheet (all components)</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:220px" id="bulkCompWrap">
+          <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">Component</label>
+          <select id="bulkComp">${compOpts}</select>
+        </div>
+        <div style="flex:1;min-width:220px">
+          <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">Format</label>
+          <select id="bulkFormat">
+            <option value="reg">Reg No + Mark</option>
+            <option value="sno">S.No + Mark</option>
+            <option value="markonly">Mark only (list order)</option>
+          </select>
+        </div>
+      </div>
+      <div id="bulkFullHint" style="display:none" class="hint" style="margin-bottom:10px">
+        <b>Column order:</b> ${scheme.comps.map(cp=>cp.label).join(' , ')}<br>
+        Example: <code>21CS001, 45, 5, 42, 5, 5</code> (a header row is auto-detected and skipped)
+      </div>
+      <textarea id="bulkArea" rows="9" style="margin-top:10px"
+        placeholder="Paste data here. Example:&#10;21CS001, Arun Kumar, 45&#10;21CS002, Priya S, 38"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="ghost" onclick="downloadTemplate()">⬇ Template CSV</button>
+        <button class="primary" onclick="previewBulk()">👁 Preview</button>
+        <button class="success" onclick="applyBulk()" id="applyBulkBtn" disabled>✓ Apply to Class</button>
+        <button class="ghost" onclick="clearBulk()">Clear</button>
+      </div>
+    </div>
+    <div id="bulkPreviewWrap"></div>`;
+
+  document.getElementById('bulkMode').addEventListener('change', ()=>{
+    const full = document.getElementById('bulkMode').value==='full';
+    document.getElementById('bulkCompWrap').style.display = full?'none':'';
+    document.getElementById('bulkFullHint').style.display = full?'block':'none';
+  });
+}
+function clearBulk(){
+  document.getElementById('bulkArea').value = '';
+  document.getElementById('bulkPreviewWrap').innerHTML = '';
+  document.getElementById('applyBulkBtn').disabled = true;
+  bulkPreview = null;
+}
+function downloadTemplate(){
+  const c = activeClass(); if(!c) return;
+  const scheme = SCHEME[c.year];
+  const mode = document.getElementById('bulkMode').value;
+  let lines = [];
+  if(mode === 'single'){
+    lines.push('RegNo,Name,Mark');
+    c.students.forEach(s=>lines.push(`${s.reg || ''},${s.name},`));
+  }else{
+    lines.push(['RegNo','Name',...scheme.comps.map(cp=>`${cp.label}(${cp.rawMax})`)].join(','));
+    c.students.forEach(s=>lines.push([s.reg||'', s.name, ...scheme.comps.map(()=>'')].join(',')));
+  }
+  const blob = new Blob(['\uFEFF'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (c.name||'class').replace(/[\\/:*?"<>|]/g,'_')+'_template.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Template downloaded ✅');
+}
+function parseNumeric(tok){ return tok!==null && tok!==undefined && tok!=='' && !isNaN(Number(tok)); }
+function previewBulk(){
+  const c = activeClass(); if(!c) return;
+  const scheme = SCHEME[c.year];
+  const mode = document.getElementById('bulkMode').value;
+  const format = document.getElementById('bulkFormat').value;
+  const text = document.getElementById('bulkArea').value;
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){ alert('Please paste some data first.'); return; }
+  bulkPreview = [];
+
+  if(mode === 'single'){
+    const compKey = document.getElementById('bulkComp').value;
+    const cp = scheme.comps.find(x=>x.key===compKey);
+    lines.forEach((line, li)=>{
+      if(li===0 && /reg|name|mark/i.test(line) && !/\d{2,}/.test(line.split(/[,;\t]/)[1]||'')) return;
+      let raw = null, matchStudent = null, status = 'ok', note = '';
+      if(format === 'markonly'){
+        if(parseNumeric(line)){ raw = Number(line); matchStudent = c.students[li] || null; }
+      }else{
+        let parts = line.split(/\t|,|;|\s{2,}/).map(x=>x.trim()).filter(Boolean);
+        if(parts.length === 1) parts = line.split(/\s+/);
+        if(format === 'reg'){
+          const reg = parts[0];
+          const markTok = parts.slice(1).reverse().find(parseNumeric);
+          if(markTok !== undefined) raw = Number(markTok);
+          matchStudent = c.students.find(s=>(s.reg||'').toLowerCase()===reg.toLowerCase());
+        }else{
+          const sno = parseInt(parts[0],10);
+          const markTok = parts.slice(1).reverse().find(parseNumeric);
+          if(markTok !== undefined) raw = Number(markTok);
+          matchStudent = c.students[sno-1] || null;
+        }
+      }
+      if(!matchStudent){ status='bad'; note='Student not matched'; }
+      else if(raw===null || isNaN(raw)){ status='bad'; note='Mark invalid'; }
+      else if(raw < 0 || raw > cp.rawMax){ status='warn'; note=`Out of range (0–${cp.rawMax}) — will clamp`; }
+      bulkPreview.push({ line, raw, student: matchStudent, status, note, compKey: cp.key, cp });
+    });
+  }else{
+    const comps = scheme.comps;
+    lines.forEach((line, li)=>{
+      let parts = line.split(/\t|,|;|\s{2,}/).map(x=>x.trim());
+      if(parts.length === 1) parts = line.split(/\s+/);
+      if(li===0 && /reg|name/i.test(parts[0]) && !parseNumeric(parts[1])) return;
+      const reg = parts[0];
+      const student = c.students.find(s=>(s.reg||'').toLowerCase()===reg.toLowerCase());
+      const marks = {};
+      let status = 'ok', note = '';
+      for(let i=0; i<comps.length; i++){
+        const tok = parts[i+1];
+        if(tok !== undefined && parseNumeric(tok)){
+          const v = Number(tok);
+          if(v < 0 || v > comps[i].rawMax){ status='warn'; note='Some values out of range'; }
+          marks[comps[i].key] = v;
+        }
+      }
+      if(!student){ status='bad'; note='Student not matched'; }
+      else if(Object.keys(marks).length === 0){ status='bad'; note='No marks'; }
+      bulkPreview.push({ line, student, marks, status, note, full:true });
+    });
+  }
+
+  const wrap = document.getElementById('bulkPreviewWrap');
+  if(!bulkPreview.length){
+    wrap.innerHTML = '<div class="card empty">Nothing parsed. Check the format.</div>';
+    document.getElementById('applyBulkBtn').disabled = true;
+    return;
+  }
+
+  let head, rows;
+  if(mode === 'single'){
+    head = `<tr><th style="width:44px">#</th><th>Line</th><th>Student</th><th>Raw</th><th>Status</th></tr>`;
+    rows = bulkPreview.map((p,i)=>`
+      <tr class="${p.status==='ok'?'row-ok':p.status==='warn'?'row-warn':'row-bad'}">
+        <td class="num">${i+1}</td>
+        <td style="font-family:monospace;font-size:12px">${esc(p.line)}</td>
+        <td>${p.student ? esc(p.student.reg+' — '+p.student.name) : '<span class="muted">—</span>'}</td>
+        <td class="num">${p.raw!==null && !isNaN(p.raw) ? fmt(p.raw) : '—'}</td>
+        <td>${p.status==='ok'?'✓ OK':p.status==='warn'?'⚠ '+esc(p.note):'✗ '+esc(p.note)}</td>
+      </tr>`).join('');
+  }else{
+    const comps = SCHEME[c.year].comps;
+    head = `<tr><th style="width:44px">#</th><th>Reg</th><th>Student</th>${comps.map(cp=>`<th class="num">${cp.label}</th>`).join('')}<th>Status</th></tr>`;
+    rows = bulkPreview.map((p,i)=>`
+      <tr class="${p.status==='ok'?'row-ok':p.status==='warn'?'row-warn':'row-bad'}">
+        <td class="num">${i+1}</td>
+        <td>${esc(p.student?p.student.reg:'—')}</td>
+        <td>${p.student?esc(p.student.name):'<span class="muted">—</span>'}</td>
+        ${comps.map(cp=>`<td class="num">${p.marks && p.marks[cp.key]!==undefined ? fmt(p.marks[cp.key]) : '—'}</td>`).join('')}
+        <td>${p.status==='ok'?'✓ OK':p.status==='warn'?'⚠ '+esc(p.note):'✗ '+esc(p.note)}</td>
+      </tr>`).join('');
+  }
+
+  const okCount = bulkPreview.filter(p=>p.student && p.status!=='bad').length;
+  const badCount = bulkPreview.filter(p=>p.status==='bad').length;
+
+  wrap.innerHTML = `<div class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <h2 style="margin:0">Preview</h2>
+      <div class="hint"><b>${okCount}</b> ready • <b style="color:var(--bad)">${badCount}</b> unmatched</div>
+    </div>
+    <div class="preview-box">
+      <table><thead>${head}</thead><tbody>${rows}</tbody></table>
+    </div>
+  </div>`;
+
+  document.getElementById('applyBulkBtn').disabled = (okCount === 0);
+}
+function applyBulk(){
+  if(!bulkPreview || !bulkPreview.length){ alert('Please preview first.'); return; }
+  const c = activeClass(); if(!c) return;
+  const scheme = SCHEME[c.year];
+  let applied = 0;
+  if(bulkPreview[0].full !== undefined && bulkPreview[0].full){
+    bulkPreview.forEach(p=>{
+      if(!p.student || !p.marks) return;
+      scheme.comps.forEach(cp=>{
+        if(p.marks[cp.key] !== undefined){
+          const v = p.marks[cp.key];
+          p.student.marks[cp.key] = Math.min(Math.max(v,0), cp.rawMax);
+        }
+      });
+      applied++;
+    });
+  }else{
+    bulkPreview.forEach(p=>{
+      if(!p.student || p.raw===null || isNaN(p.raw)) return;
+      const cp = p.cp;
+      p.student.marks[cp.key] = Math.min(Math.max(p.raw, 0), cp.rawMax);
+      applied++;
+    });
+  }
+  save();
+  bulkPreview = null;
+  document.getElementById('applyBulkBtn').disabled = true;
+  toast(applied + ' students updated ✅');
+  renderAll();
+}
+
+/* =========================================================
+   STATISTICS
+   ========================================================= */
+function renderStats(){
+  const el = document.getElementById('view-stats');
+  const c = activeClass();
+  if(!c){ el.innerHTML = '<div class="card empty">Please select a class.</div>'; return; }
+  const scheme = SCHEME[c.year];
+  const total = c.students.length;
+  if(!total){ el.innerHTML = '<div class="card empty">This class has no students.</div>'; return; }
+  if(!scheme.comps.some(x=>x.key===state.statsComp))
+    state.statsComp = scheme.comps[0].key;
+
+  // component rows
+  const compRows = scheme.comps.map(cp=>{
+    const s = compStats(c, cp);
+    const notApp = total - s.appeared;
+    const dist = getBandDistribution(c, cp);
+    let bandCell = '<span class="muted">—</span>';
+    if(dist){
+      const parts = Object.entries(dist)
+        .filter(([v, cnt])=>cnt > 0)
+        .sort((a,b)=>Number(b[0]) - Number(a[0]))
+        .map(([v, cnt])=>`<span class="band-chip">${v}×${cnt}</span>`);
+      bandCell = parts.length ? parts.join(' ') : '—';
+    }
+    return `<tr style="cursor:pointer" onclick="state.statsComp='${cp.key}';save();renderStats()" class="${state.statsComp===cp.key?'row-ok':''}">
+      <td><b>${esc(cp.label)}</b>${cp.conv?' <span class="pill">CIA</span>':''}</td>
+      <td class="num">${total}</td>
+      <td class="num">${s.appeared}</td>
+      <td class="num">${notApp}</td>
+      <td class="num" style="color:var(--ok);font-weight:800">${s.pass}</td>
+      <td class="num" style="color:var(--bad);font-weight:800">${s.fail}</td>
+      <td class="num"><span class="stat-badge ${s.passPct>=60?'pass':s.passPct>=40?'abs':'fail'}">${s.appeared?s.passPct.toFixed(1)+'%':'—'}</span></td>
+      <td>${bandCell}</td>
+    </tr>`;
+  }).join('');
+
+  // overall (per-student, no double counting)
+  const oc = overallCiaStats(c);
+  const ocNotApp = total - oc.appeared;
+
+  const cp = scheme.comps.find(x=>x.key===state.statsComp);
+  const sStats = compStats(c, cp);
+  const showBand = state.settings.bandsEnabled && cp.conv;
+
+  let detailHead = `<tr>
+    <th style="width:45px">#</th>
+    <th style="width:120px">Reg No</th>
+    <th>Name</th>
+    <th class="num" style="width:90px">Raw (${cp.rawMax})</th>`;
+  if(cp.conv) detailHead += `<th class="num" style="width:90px">Scaled /100</th>`;
+  if(cp.conv) detailHead += `<th class="num" style="width:100px">Converted (${cp.max})</th>`;
+  detailHead += `<th class="num" style="width:100px">Status</th></tr>`;
+
+  const detailRows = c.students.map((s,i)=>{
+    const raw = s.marks[cp.key];
+    const filled = hasMark(raw);
+    const scaled = cp.conv ? scaleTo100(cp, raw) : null;
+    const internal = compInternal(cp, raw);
+    const passed = filled && (Number(raw)/cp.rawMax*100) >= state.settings.passPercent;
+    let cells = `<td class="num">${i+1}</td>
+      <td>${esc(s.reg||'—')}</td>
+      <td>${esc(s.name)}</td>
+      <td class="num">${filled?fmt(raw):'—'}</td>`;
+    if(cp.conv) cells += `<td class="num">${scaled!==null?scaled.toFixed(1):'—'}</td>`;
+    if(cp.conv) cells += `<td class="num"><b>${fmt(internal)}</b></td>`;
+    cells += `<td class="num">${!filled?'<span class="stat-badge abs">Absent</span>':passed?'<span class="stat-badge pass">Pass</span>':'<span class="stat-badge fail">Fail</span>'}</td>`;
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  // failed students card
+  let failedHtml = '';
+  if(oc.failedStudents.length){
+    const ciaComps = scheme.comps.filter(x=>x.conv);
+    const failedRows = oc.failedStudents.map((s,i)=>{
+      const cells = ciaComps.map(cp2=>{
+        const raw = s.marks[cp2.key];
+        if(!hasMark(raw)) return `<td class="num muted">—</td>`;
+        const pct = Number(raw)/cp2.rawMax*100;
+        const ok = pct >= state.settings.passPercent;
+        return `<td class="num">${fmt(raw)} <span style="color:${ok?'var(--ok)':'var(--bad)'};font-weight:800">${ok?'✓':'✗'}</span></td>`;
+      }).join('');
+      const failedNames = ciaComps
+        .filter(cp2=>{
+          const raw = s.marks[cp2.key];
+          return hasMark(raw) && (Number(raw)/cp2.rawMax*100) < state.settings.passPercent;
+        })
+        .map(cp2=>cp2.label).join(', ');
+      return `<tr>
+        <td class="num">${i+1}</td>
+        <td>${esc(s.reg||'—')}</td>
+        <td>${esc(s.name)}</td>
+        ${cells}
+        <td style="color:var(--bad);font-weight:700">${failedNames}</td>
+      </tr>`;
+    }).join('');
+    failedHtml = `<div class="card">
+      <h2>Failed in Overall CIA (${oc.failedStudents.length})</h2>
+      <p class="hint" style="margin-bottom:10px">Students who scored below ${state.settings.passPercent}% in at least one CIA.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:45px">#</th>
+            <th style="width:120px">Reg No</th>
+            <th>Name</th>
+            ${ciaComps.map(cp2=>`<th class="num">${cp2.label}<br><small>/${cp2.rawMax}</small></th>`).join('')}
+            <th>Failed In</th>
+          </tr></thead>
+          <tbody>${failedRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="kpis">
+      <div class="kpi blue"><div class="ico">👥</div><div class="k">Total</div><div class="v">${total}</div></div>
+      <div class="kpi"><div class="ico">✍️</div><div class="k">Appeared (Overall CIA)</div><div class="v">${oc.appeared}</div></div>
+      <div class="kpi green"><div class="ico">✅</div><div class="k">Pass (Overall CIA)</div><div class="v">${oc.pass}</div></div>
+      <div class="kpi red"><div class="ico">❌</div><div class="k">Fail (Overall CIA)</div><div class="v">${oc.fail}</div></div>
+      <div class="kpi ${oc.passPct>=60?'green':oc.passPct>=40?'amber':'red'}">
+        <div class="ico">🎯</div><div class="k">Overall CIA Pass %</div>
+        <div class="v">${oc.appeared?oc.passPct.toFixed(1):'—'}<small>%</small></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Component-wise Statistics</h2>
+      <div class="hint" style="margin-bottom:10px">Pass criteria: raw mark ≥ <b>${state.settings.passPercent}%</b> of max. Each student counts once.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Component</th><th class="num">Total</th><th class="num">Appeared</th>
+            <th class="num">Not Appeared</th><th class="num">Pass</th><th class="num">Fail</th>
+            <th class="num">Pass %</th><th>Bands</th>
+          </tr></thead>
+          <tbody>${compRows}</tbody>
+          <tfoot><tr style="background:var(--blue-bg)">
+            <td colspan="4"><b style="color:var(--ink)">Overall CIA (combined)</b></td>
+            <td class="num"><b style="color:var(--ok)">${oc.pass}</b></td>
+            <td class="num"><b style="color:var(--bad)">${oc.fail}</b></td>
+            <td class="num"><span class="stat-badge ${oc.passPct>=60?'pass':oc.passPct>=40?'abs':'fail'}">${oc.appeared?oc.passPct.toFixed(1)+'%':'—'}</span></td>
+            <td><span class="muted" style="font-size:11px">${ocNotApp} absent</span></td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+
+    ${failedHtml}
+
+    <div class="card">
+      <h2>${esc(cp.label)} — Student Details</h2>
+      <div class="table-wrap">
+        <table><thead>${detailHead}</thead><tbody>${detailRows}</tbody></table>
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+function renderPrint(){
+  const el = document.getElementById('view-print');
+  const c = activeClass();
+  if(!c){ el.innerHTML = '<div class="card empty">Please select a class.</div>'; return; }
+  const scheme = SCHEME[c.year];
+  let opts = `<option value="all">📚 All Mark Lists (all sheets + log book)</option>`;
+  opts += scheme.comps.map(cp=>`<option value="comp:${cp.key}">${cp.label} — Mark List${cp.conv?' (converted)':''}</option>`).join('');
+  opts += `<option value="internal">Internal Marks Summary (/40)</option>`;
+  opts += `<option value="logbook">Log Book / Register (landscape)</option>`;
+
+  el.innerHTML = `
+    <div class="card">
+      <h2>Print Mark Lists — ${esc(c.name)}</h2>
+      <div class="row">
+        <select id="printType" onchange="state.printType=this.value;save()" style="flex:2;min-width:280px">
+          ${opts}
+        </select>
+        <button class="primary" onclick="doPrint()">🖨 Preview &amp; Print</button>
+        <button class="ghost" onclick="exportCSV()">⬇ Excel (CSV)</button>
+      </div>
+      <p class="hint" style="margin-top:12px">
+        <b>All Mark Lists</b> — every component sheet plus internal summary and log book, each on its own page.
+      </p>
+    </div>`;
+  const sel = document.getElementById('printType');
+  if(state.printType && Array.from(sel.options).some(o=>o.value===state.printType)){
+    sel.value = state.printType;
+  }else{
+    state.printType = sel.value;
+  }
+}
+
+const PRINT_CSS = `
+@page{size:A4 portrait;margin:12mm}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:18px;color:#000;background:#fff}
+.topbar{position:sticky;top:0;background:#f1f5f9;padding:10px;display:flex;gap:10px;justify-content:flex-end;border-bottom:1px solid #cbd5e1;margin-bottom:18px;z-index:9}
+.topbar button{padding:9px 18px;font-size:14px;border-radius:6px;border:1px solid #94a3b8;background:#fff;cursor:pointer;font-weight:700}
+.topbar button:first-child{background:#4f46e5;color:#fff;border-color:#4f46e5}
+.sheet{page-break-after:always}
+.sheet:last-of-type{page-break-after:auto}
+.phead{text-align:center;margin-bottom:12px}
+.phead .cname{font-size:18px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px}
+.phead .csub{font-size:12px;margin-top:3px}
+.phead .ptitle{font-size:14px;font-weight:bold;margin-top:9px;text-decoration:underline}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border:1px solid #000;padding:4px 6px}
+th{background:#e5e7eb;font-weight:bold;text-align:center;font-size:11px}
+td.num,th.num{text-align:center}
+td.name{text-align:left}
+.sign{display:flex;justify-content:space-between;margin-top:60px;font-size:12px}
+.sign div{border-top:1px solid #000;padding-top:6px;width:38%;text-align:center}
+@media print{.topbar{display:none}body{padding:0}}
+`;
+
+function compTable(c, key){
+  const cp = SCHEME[c.year].comps.find(x=>x.key===key);
+  if(!cp) return '';
+  const head = `<tr>
+    <th style="width:45px">S.No</th><th style="width:110px">Register No</th>
+    <th>Student Name</th>
+    <th style="width:100px">${cp.label}<br>(${cp.rawMax})</th>
+    ${cp.conv?`<th style="width:100px">Converted<br>(${cp.max})</th>`:''}
+  </tr>`;
+  const rows = c.students.map((s,i)=>{
+    const r = calc(c,s);
+    const raw = s.marks[key];
+    return `<tr>
+      <td class="num">${i+1}</td>
+      <td class="num">${esc(s.reg||'-')}</td>
+      <td class="name">${esc(s.name)}</td>
+      <td class="num">${hasMark(raw)?fmt(raw):'-'}</td>
+      ${cp.conv?`<td class="num">${fmt(r.comps[key])}</td>`:''}
+    </tr>`;
+  }).join('');
+  return `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+}
+function internalTable(c){
+  const scheme = SCHEME[c.year];
+  const head = `<tr>
+    <th style="width:45px">S.No</th><th style="width:110px">Reg No</th><th>Student Name</th>
+    ${scheme.comps.map(cp=>`<th style="width:80px">${cp.label}<br>(${cp.max})</th>`).join('')}
+    <th style="width:95px">Internal<br>(40)</th>
+  </tr>`;
+  const rows = c.students.map((s,i)=>{
+    const r = calc(c,s);
+    return `<tr>
+      <td class="num">${i+1}</td>
+      <td class="num">${esc(s.reg||'-')}</td>
+      <td class="name">${esc(s.name)}</td>
+      ${scheme.comps.map(cp=>`<td class="num">${fmt(r.comps[cp.key])}</td>`).join('')}
+      <td class="num"><b>${fmt(r.internal)}</b></td>
+    </tr>`;
+  }).join('');
+  return `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+}
+function logbookTable(c){
+  const scheme = SCHEME[c.year];
+  const head = `<tr>
+    <th style="width:38px">S.No</th><th style="width:95px">Reg No</th><th>Student Name</th>
+    ${scheme.comps.map(cp=>cp.conv
+      ? `<th style="width:68px">${cp.label}<br>Raw(${cp.rawMax})</th><th style="width:68px">${cp.label}<br>(${cp.max})</th>`
+      : `<th style="width:68px">${cp.label}<br>(${cp.max})</th>`).join('')}
+    <th style="width:80px">Internal<br>(40)</th>
+  </tr>`;
+  const rows = c.students.map((s,i)=>{
+    const r = calc(c,s);
+    return `<tr>
+      <td class="num">${i+1}</td>
+      <td class="num">${esc(s.reg||'-')}</td>
+      <td class="name">${esc(s.name)}</td>
+      ${scheme.comps.map(cp=>{
+        const raw = s.marks[cp.key];
+        if(cp.conv) return `<td class="num">${hasMark(raw)?fmt(raw):'-'}</td><td class="num">${fmt(r.comps[cp.key])}</td>`;
+        return `<td class="num">${fmt(r.comps[cp.key])}</td>`;
+      }).join('')}
+      <td class="num"><b>${fmt(r.internal)}</b></td>
+    </tr>`;
+  }).join('');
+  return `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+}
+function buildPrintDoc(c, kind){
+  const scheme = SCHEME[c.year];
+  const parts = [];
+  let landscape = false;
+  const titleBlock = t => `<div class="phead">
+      <div class="cname">${esc(c.name)}</div>
+      <div class="csub">Subject: ${esc(c.subject||'—')} &nbsp;|&nbsp; ${scheme.label} &nbsp;|&nbsp; Total Students: ${c.students.length}</div>
+      <div class="ptitle">${t}</div>
+    </div>`;
+  const push = (title, tableHTML) => parts.push(
+    `<div class="sheet">${titleBlock(title)}${tableHTML}
+      <div class="sign"><div>Faculty In-charge</div><div>HOD</div></div>
+    </div>`
+  );
+  if(kind === 'all'){
+    scheme.comps.forEach(cp=>{
+      push(`${cp.label} Mark List${cp.conv?' (Converted to '+cp.max+')':''}`, compTable(c, cp.key));
+    });
+    push('Internal Assessment Marks (Total / 40)', internalTable(c));
+    landscape = true;
+    parts.push(`<div class="sheet" style="page-break-before:always">${titleBlock('Mark Log Book / Register')}${logbookTable(c)}
+      <div class="sign"><div>Faculty In-charge</div><div>HOD</div></div></div>`);
+  }else if(kind.startsWith('comp:')){
+    const key = kind.slice(5);
+    const cp = scheme.comps.find(x=>x.key===key);
+    if(!cp){ alert('Component not found.'); return ''; }
+    push(`${cp.label} Mark List${cp.conv?' (Converted to '+cp.max+')':''}`, compTable(c, key));
+  }else if(kind === 'internal'){
+    push('Internal Assessment Marks (Total / 40)', internalTable(c));
+  }else if(kind === 'logbook'){
+    landscape = true;
+    push('Mark Log Book / Register', logbookTable(c));
+  }
+  const pageCss = landscape ? '@page{size:A4 landscape;margin:10mm}' : '';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>${esc(c.name)} — Marks</title>
+  <style>${PRINT_CSS}${pageCss}</style></head>
+  <body>
+    <div class="topbar">
+      <button onclick="window.print()">🖨 Print</button>
+      <button onclick="window.close()">✕ Close</button>
+    </div>
+    ${parts.join('')}
+    <script>window.addEventListener('load',function(){setTimeout(function(){try{window.print()}catch(e){}},400)});<\/script>
+  </body></html>`;
+}
+function doPrint(){
+  const c = activeClass();
+  if(!c){ alert('Please select a class.'); return; }
+  if(!c.students.length){ alert('This class has no students.'); return; }
+  const kind = document.getElementById('printType').value;
+  state.printType = kind; save();
+  const html = buildPrintDoc(c, kind);
+  if(!html) return;
+  const w = window.open('', '_blank');
+  if(!w){ alert('Pop-up blocked. Please allow pop-ups.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+function exportCSV(){
+  const c = activeClass();
+  if(!c || !c.students.length){ alert('No class or students found.'); return; }
+  const scheme = SCHEME[c.year];
+  const convComps = scheme.comps.filter(x=>x.conv);
+  const head = ['S.No','Register No','Student Name',
+    ...scheme.comps.map(cp=>`${cp.label} (${cp.rawMax})`),
+    ...convComps.map(cp=>`${cp.label} converted (${cp.max})`),
+    'Internal (40)'];
+  const lines = [head.join(',')];
+  c.students.forEach((s,i)=>{
+    const r = calc(c,s);
+    const row = [i+1, s.reg||'', s.name||'',
+      ...scheme.comps.map(cp=>hasMark(s.marks[cp.key])?s.marks[cp.key]:''),
+      ...convComps.map(cp=>r.comps[cp.key]==null?'':r.comps[cp.key]),
+      r.internal];
+    lines.push(row.map(v=>{
+      const str = String(v);
+      return /[",\n]/.test(str) ? '"'+str.replace(/"/g,'""')+'"' : str;
+    }).join(','));
+  });
+  const blob = new Blob(['\uFEFF'+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (c.name||'marks').replace(/[\\/:*?"<>|]/g,'_')+'_marks.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+function renderMyAccount(){
+  const user = currentUser();
+  if(!user) return '';
+  const avatarHtml = user.avatar
+    ? `<div class="avatar-lg"><img src="${user.avatar}" alt=""></div>`
+    : `<div class="avatar-lg">📷</div>`;
+  return `<div class="card">
+    <h2>My Account</h2>
+    <div class="row" style="gap:18px;margin-bottom:16px;align-items:flex-start">
+      <div>
+        <div class="avatar-lg" onclick="document.getElementById('avatarFile').click()" title="Click to upload">
+          ${user.avatar ? `<img src="${user.avatar}" alt="">` : '📷'}
+        </div>
+        <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+        <div class="row" style="margin-top:8px;gap:6px">
+          <button class="ghost small" onclick="document.getElementById('avatarFile').click()">Upload</button>
+          ${user.avatar ? `<button class="danger small" onclick="removeAvatar()">Remove</button>` : ''}
+        </div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <div class="row" style="margin-bottom:10px">
+          <div style="flex:1;min-width:150px">
+            <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">Username</label>
+            <input value="${esc(user.username)}" disabled>
+          </div>
+          <div style="flex:1;min-width:150px">
+            <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">Role</label>
+            <input value="${user.role}" disabled>
+          </div>
+        </div>
+        <div class="row">
+          <div style="flex:1;min-width:150px">
+            <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">Current Password</label>
+            <input id="curPass" type="password" placeholder="Current password">
+          </div>
+          <div style="flex:1;min-width:150px">
+            <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">New Password</label>
+            <input id="newPass" type="password" placeholder="New password">
+          </div>
+          <button class="primary" onclick="changeMyPassword()" style="align-self:flex-end">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function changeMyPassword(){
+  const s = getSession(); if(!s) return;
+  const cur = document.getElementById('curPass').value;
+  const nw = document.getElementById('newPass').value;
+  if(!cur || !nw){ alert('Please fill both current and new password.'); return; }
+  const users = getUsers();
+  const user = users.find(u=>u.username === s.username);
+  if(!user || user.password !== cur){ alert('Current password is incorrect.'); return; }
+  user.password = nw;
+  saveUsers(users);
+  document.getElementById('curPass').value = '';
+  document.getElementById('newPass').value = '';
+  toast('Password updated ✅');
+}
+
+function renderAppearance(){
+  const presets = Object.entries(THEMES).map(([key, t])=>`
+    <div class="theme-preset ${state.accent===key?'active':''}"
+         style="background:${t.preview}"
+         onclick="setThemeAccent('${key}')"
+         title="${t.name}"></div>
+  `).join('');
+  return `<div class="card">
+    <h2>Appearance</h2>
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:16px">
+      <div>
+        <div class="hint" style="font-weight:700;margin-bottom:8px;color:var(--ink)">Mode</div>
+        <div class="mode-toggle">
+          <button class="${state.theme==='light'?'active':''}" onclick="setThemeMode('light')">☀️ Light</button>
+          <button class="${state.theme==='dark'?'active':''}" onclick="setThemeMode('dark')">🌙 Dark</button>
+        </div>
+      </div>
+      <div>
+        <div class="hint" style="font-weight:700;margin-bottom:8px;color:var(--ink)">Accent Color</div>
+        <div class="row" style="gap:8px">${presets}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderUserManagement(){
+  if(!isAdmin()) return '';
+  const users = getUsers();
+  const s = getSession();
+  const rows = users.map((u, i)=>`
+    <tr>
+      <td>
+        <div class="row" style="gap:8px">
+          ${u.avatar ? `<div class="avatar-sm" style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0"><img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover"></div>` : ''}
+          <span>${esc(u.username)}${u.username === s.username ? ' <span class="pill green" style="font-size:10px">You</span>' : ''}</span>
+        </div>
+      </td>
+      <td><span class="pill" style="background:${u.role==='admin'?'var(--warn-bg)':'var(--blue-bg)'};color:${u.role==='admin'?'var(--warn)':'var(--blue)'}">${u.role}</span></td>
+      <td>${u.role === 'admin' ? '<span class="muted">Protected</span>' : `<button class="danger small" onclick="removeUser(${i})">Remove</button>`}</td>
+    </tr>
+  `).join('');
+  return `<div class="card">
+    <h2>User Management</h2>
+    <p class="hint" style="margin-bottom:12px">Create accounts for teachers. Each user can enter marks, upload bulk data, view statistics and print. Only admins can delete records, restore backups or change settings.</p>
+    <div class="row" style="margin-bottom:12px">
+      <input id="newUsername" placeholder="New username" style="flex:1;min-width:150px">
+      <input id="newUserPassword" type="password" placeholder="Password" style="flex:1;min-width:150px">
+      <button class="primary" onclick="addUser()">+ Add User</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Username</th><th>Role</th><th style="width:120px">Action</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function addUser(){
+  if(!isAdmin()){ alert('Only admins can add users.'); return; }
+  const u = document.getElementById('newUsername').value.trim();
+  const p = document.getElementById('newUserPassword').value;
+  if(!u || !p){ alert('Username and password are required.'); return; }
+  const users = getUsers();
+  if(users.some(x=>x.username === u)){ alert('Username already exists.'); return; }
+  users.push({ username: u, password: p, role: 'user' });
+  saveUsers(users);
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newUserPassword').value = '';
+  renderSettings();
+  toast('User added ✅');
+}
+function removeUser(i){
+  if(!isAdmin()){ alert('Only admins can remove users.'); return; }
+  const users = getUsers();
+  if(i === 0){ alert('Cannot remove the primary admin.'); return; }
+  if(!confirm('Remove user "'+users[i].username+'"?')) return;
+  users.splice(i, 1);
+  saveUsers(users);
+  renderSettings();
+  toast('User removed');
+}
+
+function renderSettings(){
+  const el = document.getElementById('view-settings');
+  const s = state.settings;
+  let html = renderMyAccount() + renderAppearance();
+
+  if(isAdmin()){
+    const bandRows = s.bands.map((b,i)=>`
+      <tr>
+        <td class="num">${i+1}</td>
+        <td><input type="number" step="0.01" value="${b.min}" oninput="updateBand(${i},'min',this.value)"></td>
+        <td><input type="number" step="0.01" value="${b.max}" oninput="updateBand(${i},'max',this.value)"></td>
+        <td><input type="number" step="0.01" value="${b.val}" oninput="updateBand(${i},'val',this.value)"></td>
+        <td><button class="danger small" onclick="removeBand(${i})">✕</button></td>
+      </tr>`).join('');
+
+    html += `<div class="card">
+      <h2>Conversion Bands (CIA)</h2>
+      <p class="hint" style="margin-bottom:12px">
+        Raw CIA is scaled to 100, then mapped through this band table. Band distribution is shown in the <b>Statistics</b> page.
+      </p>
+      <div class="row" style="margin-bottom:12px">
+        <label class="row" style="gap:8px;font-weight:700;cursor:pointer">
+          <input type="checkbox" style="width:auto" ${s.bandsEnabled?'checked':''} onchange="toggleSetting('bandsEnabled',this.checked)">
+          Enable band conversion
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table class="band-tbl">
+          <thead><tr>
+            <th style="width:40px">#</th>
+            <th>Min (from /100)</th>
+            <th>Max (to /100)</th>
+            <th>Band Value</th>
+            <th style="width:60px"></th>
+          </tr></thead>
+          <tbody>${bandRows}</tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" onclick="addBand()">+ Add Band Row</button>
+        <button class="ghost" onclick="resetBands()">↺ Reset to Default</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pass Criteria (Statistics)</h2>
+      <div class="row">
+        <div style="flex:1;min-width:220px">
+          <label class="hint" style="display:block;margin-bottom:5px;font-weight:700">Pass Percentage (%)</label>
+          <input type="number" min="0" max="100" step="1" value="${s.passPercent}" oninput="setPassPercent(this.value)">
+        </div>
+        <div style="flex:2;min-width:260px">
+          <div class="hint" style="margin-top:22px">
+            A student with a raw mark ≥ passPercent% of the component max is counted as <b style="color:var(--ok)">Pass</b>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Rounding</h2>
+      <div class="row">
+        <select onchange="setRoundMode(this.value)" style="max-width:220px">
+          <option value="2"   ${state.roundMode==='2'?'selected':''}>2 decimals (default)</option>
+          <option value="0.5" ${state.roundMode==='0.5'?'selected':''}>Nearest 0.5</option>
+          <option value="1"   ${state.roundMode==='1'?'selected':''}>Nearest integer</option>
+        </select>
+        <span class="hint">Rounding method for converted marks.</span>
+      </div>
+    </div>
+
+    ${renderUserManagement()}
+
+    <div class="card">
+      <h2>Backup / Restore</h2>
+      <div class="row">
+        <button class="ghost" onclick="backup()">⬇ Backup (JSON)</button>
+        <button class="ghost" onclick="document.getElementById('restoreFile').click()">⬆ Restore</button>
+        <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restore(this)">
+        <button class="danger" onclick="resetAll()">Delete All Data</button>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+function updateBand(i, field, val){
+  const v = (val === '' || isNaN(val)) ? 0 : Number(val);
+  state.settings.bands[i][field] = v;
+  save();
+}
+function addBand(){ state.settings.bands.push({ min:0, max:0, val:0 }); save(); renderSettings(); toast('Band row added'); }
+function removeBand(i){ state.settings.bands.splice(i,1); save(); renderSettings(); }
+function resetBands(){
+  if(!confirm('Reset bands to default?')) return;
+  state.settings.bands = DEFAULT_BANDS.map(b=>({...b}));
+  save(); renderSettings(); toast('Bands reset ✅');
+}
+function toggleSetting(key, val){ state.settings[key] = val; save(); renderAll(); toast('Setting updated'); }
+function setPassPercent(v){
+  const n = Number(v);
+  if(!isNaN(n)){ state.settings.passPercent = Math.min(Math.max(n,0),100); save(); }
+}
+function setRoundMode(v){ state.roundMode = v; save(); renderAll(); }
+
+/* =========================================================
+   BACKUP / RESTORE
+   ========================================================= */
+function backup(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'markdesk_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup downloaded ✅');
+}
+function restore(input){
+  if(!isAdmin()){ alert('Only administrators can restore backups.'); return; }
+  const f = input.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.classes) throw new Error('Invalid backup file');
+      if(!confirm('This will replace current data. Continue?')) return;
+      state.classes = data.classes || [];
+      state.roundMode = data.roundMode || '2';
+      state.activeClassId = data.activeClassId || (state.classes[0]?state.classes[0].id:null);
+      state.chartType = data.chartType || 'bar';
+      state.theme = data.theme || 'light';
+      state.accent = data.accent || 'indigo';
+      state.settings = Object.assign({
+        bandsEnabled: true, passPercent: 50,
+        bands: DEFAULT_BANDS.map(b=>({...b}))
+      }, data.settings || {});
+      if(!Array.isArray(state.settings.bands) || !state.settings.bands.length)
+        state.settings.bands = DEFAULT_BANDS.map(b=>({...b}));
+      state.classes.forEach(c=>{
+        c.students = c.students || [];
+        c.students.forEach(st=>{ st.marks = st.marks || {}; });
+      });
+      state.activeComp = null; state.statsComp = null;
+      save(); applyTheme(); renderAll();
+      toast('Restored ✅');
+    }catch(err){ alert('Invalid file: '+err.message); }
+    input.value='';
+  };
+  reader.readAsText(f);
+}
+function resetAll(){
+  if(!isAdmin()){ alert('Only administrators can reset data.'); return; }
+  if(!confirm('Delete ALL data? This cannot be undone.')) return;
+  if(!confirm('Really sure? Have you taken a backup?')) return;
+  localStorage.removeItem(STORE_KEY);
+  state.classes = [];
+  state.activeClassId = null;
+  state.activeComp = null;
+  state.statsComp = null;
+  state.expandedClassId = null;
+  renderAll();
+  toast('All data cleared');
+}
+
+/* =========================================================
+   RENDER ALL
+   ========================================================= */
+function renderTopSelector(){
+  const sel = document.getElementById('globalClassSel');
+  if(!state.classes.length){
+    sel.innerHTML = '<option value="">— No class —</option>';
+    sel.disabled = true; return;
+  }
+  sel.disabled = false;
+  if(!state.classes.some(c=>c.id===state.activeClassId))
+    state.activeClassId = state.classes[0].id;
+  sel.innerHTML = state.classes.map(c=>
+    `<option value="${c.id}"${c.id===state.activeClassId?' selected':''}>${esc(c.name)} — ${SCHEME[c.year].label} (${c.students.length})</option>`
+  ).join('');
+}
+function renderAll(){
+  applyTheme();
+  applyPermissions();
+  renderTopSelector();
+  renderDashboard();
+  renderClasses();
+  renderEntry();
+  renderBulk();
+  renderStats();
+  renderPrint();
+  renderSettings();
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+seedUsers();
+// Preload theme for login screen
+try{
+  const raw = localStorage.getItem(STORE_KEY);
+  if(raw){
+    const s = JSON.parse(raw);
+    if(s.theme) document.documentElement.setAttribute('data-theme', s.theme);
+    if(s.accent && THEMES[s.accent]){
+      document.documentElement.style.setProperty('--brand', THEMES[s.accent].brand);
+      document.documentElement.style.setProperty('--brand2', THEMES[s.accent].brand2);
+    }
+  }
+}catch(e){}
+
+if(sessionStorage.getItem(SESSION_KEY)){
+  showApp();
+}else{
+  showLogin();
+}
+</script>
+</body>
+</html>
