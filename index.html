@@ -4,203 +4,448 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tamil — Internal Marks Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ============ THEME VARS ============ */
 :root {
   --brand-main: #e53935;
   --brand-main-hover: #d32f2f;
-  
-  --bg-body: #f4f5f7;
+  --active-text: var(--brand-main);
+
+  --bg-body: #f5f6fa;
   --bg-panel: #ffffff;
   --bg-sidebar: #ffffff;
-  
-  --text-main: #333333;
-  --text-muted: #777777;
-  --border-color: #e0e0e0;
-  --hover-bg: #f5f5f5;
-  --active-bg: #ffebee;
-  --active-text: var(--brand-main);
-  
-  --ok: #2e7d32; --ok-bg: #e8f5e9;
-  --bad: #c62828; --bad-bg: #ffebee;
-  --warn: #ef6c00; --warn-bg: #fff3e0;
-  --blue: #1565c0; --blue-bg: #e3f2fd;
-  
-  --card-radius: 8px;
-  --btn-radius: 6px;
-  
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
+
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+
+  --border-color: #e6e9f0;
+  --border-strong: #d4dae5;
+  --hover-bg: #f2f4f8;
+  --active-bg: color-mix(in srgb, var(--brand-main) 10%, transparent);
+
+  --ok: #16a34a;   --ok-bg: #e7f7ee;
+  --bad: #dc2626;  --bad-bg: #fdecec;
+  --warn: #ea580c; --warn-bg: #fff2e6;
+  --blue: #2563eb; --blue-bg: #e9f0fe;
+
+  --card-radius: 20px;
+  --btn-radius: 12px;
+
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 10px 30px -12px rgba(15,23,42,0.18), 0 3px 10px rgba(15,23,42,0.04);
+  --shadow-lg: 0 24px 60px -20px rgba(15,23,42,0.28);
+  --shadow-brand: 0 10px 24px -10px color-mix(in srgb, var(--brand-main) 55%, transparent);
+  --ring: 0 0 0 4px color-mix(in srgb, var(--brand-main) 18%, transparent);
 }
 
 [data-theme="dark"] {
-  --bg-body: #121212;
-  --bg-panel: #1e1e1e;
-  --bg-sidebar: #1e1e1e;
-  --text-main: #e0e0e0;
-  --text-muted: #9e9e9e;
-  --border-color: #333333;
-  --hover-bg: #2c2c2c;
-  --active-bg: rgba(229, 57, 53, 0.2);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --bg-body: #0a0e17;
+  --bg-panel: #111827;
+  --bg-sidebar: #0d131f;
+  --text-main: #e5ecf5;
+  --text-muted: #94a3b8;
+  --border-color: #1e293b;
+  --border-strong: #2b3a4f;
+  --hover-bg: #1a2334;
+  --active-bg: color-mix(in srgb, var(--brand-main) 20%, transparent);
+
+  --ok: #4ade80;   --ok-bg: rgba(74,222,128,0.14);
+  --bad: #f87171;  --bad-bg: rgba(248,113,113,0.14);
+  --warn: #fb923c; --warn-bg: rgba(251,146,60,0.14);
+  --blue: #60a5fa; --blue-bg: rgba(96,165,250,0.14);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 12px 30px -12px rgba(0,0,0,0.7);
+  --shadow-lg: 0 30px 70px -20px rgba(0,0,0,0.85);
 }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-body);
   color: var(--text-main);
   font-size: 14px;
+  line-height: 1.5;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+h1, h2, h3, h4, h5 { font-family: 'Outfit', 'Inter', sans-serif; letter-spacing: -0.02em; }
 
-/* ============ LOGIN ============ */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--bg-body);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== LOGIN ===== */
 .login-screen {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-body);
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--brand-main) 24%, transparent) 0%, transparent 42%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, #6366f1 20%, transparent) 0%, transparent 40%),
+    radial-gradient(circle at 82% 92%, color-mix(in srgb, #f59e0b 16%, transparent) 0%, transparent 45%),
+    var(--bg-body);
 }
 .login-card {
-  background: var(--bg-panel);
-  border-radius: var(--card-radius);
-  padding: 40px;
+  position: relative;
+  background: color-mix(in srgb, var(--bg-panel) 82%, transparent);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  border-radius: 26px;
+  padding: 46px 40px 36px;
   width: 100%;
-  max-width: 400px;
-  box-shadow: var(--shadow-md);
-  border-top: 5px solid var(--brand-main);
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+  animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(22px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
 }
 .login-logo {
   text-align: center;
-  font-size: 32px;
-  font-weight: bold;
-  color: var(--brand-main);
+  font-family: 'Outfit', sans-serif;
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--brand-main), color-mix(in srgb, var(--brand-main) 45%, #ff8a8a));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
+.login-subtitle {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
   margin-bottom: 30px;
-  letter-spacing: 1px;
 }
 .login-card input {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
   border: 1px solid var(--border-color);
-  border-radius: var(--btn-radius);
+  border-radius: 14px;
   font-size: 14px;
+  font-family: inherit;
   background: var(--bg-body);
   color: var(--text-main);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
-.login-card input:focus { outline: none; border-color: var(--brand-main); }
+.login-card input:focus {
+  outline: none;
+  border-color: var(--brand-main);
+  background: var(--bg-panel);
+  box-shadow: var(--ring);
+}
 .login-btn {
   width: 100%;
-  padding: 12px;
-  background: var(--brand-main);
+  padding: 14px;
+  background: linear-gradient(135deg, var(--brand-main), var(--brand-main-hover));
   color: #fff;
   border: none;
-  border-radius: var(--btn-radius);
-  font-size: 16px;
-  font-weight: bold;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
   cursor: pointer;
+  box-shadow: var(--shadow-brand);
+  transition: transform 0.15s, filter 0.2s, box-shadow 0.2s;
+  font-family: inherit;
 }
-.login-btn:hover { background: var(--brand-main-hover); }
-.login-error { color: var(--bad); font-size: 13px; text-align: center; margin-bottom: 10px; display: none; }
+.login-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.login-btn:active { transform: translateY(0); filter: brightness(0.98); }
+.login-error {
+  color: var(--bad);
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 10px;
+  display: none;
+  font-weight: 600;
+}
 .password-wrapper { position: relative; }
-.toggle-password { position: absolute; right: 12px; top: 12px; cursor: pointer; font-size: 16px; color: var(--text-muted); }
+.toggle-password {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.toggle-password:hover { color: var(--text-main); }
 
-/* ============ LAYOUT ============ */
+/* ===== APP SHELL ===== */
 .app-container { display: none; flex-direction: column; height: 100vh; }
 
-/* Topbar */
 .topbar {
-  height: 60px;
-  background-color: var(--brand-main);
+  height: 64px;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  box-shadow: var(--shadow-sm);
+  padding: 0 22px;
   z-index: 100;
+  position: relative;
+  background:
+    radial-gradient(circle at 20% -60%, rgba(255,255,255,0.28), transparent 55%),
+    linear-gradient(135deg, var(--brand-main), var(--brand-main-hover));
+  box-shadow: 0 6px 24px -10px color-mix(in srgb, var(--brand-main) 60%, transparent);
 }
-.topbar-left { display: flex; align-items: center; gap: 15px; }
-.topbar-logo { font-size: 22px; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-.topbar-logo-icon { background: #fff; color: var(--brand-main); width: 32px; height: 32px; border-radius: var(--btn-radius); display: grid; place-items: center; font-size: 20px; }
-.topbar-search input { width: 100%; padding: 9px 12px 9px 38px; border-radius: 20px; border: none; background: rgba(255,255,255,0.2); color: #fff; outline: none; }
-.topbar-search input::placeholder { color: rgba(255,255,255,0.7); }
-.topbar-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.7); font-size: 14px; pointer-events: none; }
-.topbar-search-results { position: absolute; top: 40px; left: 0; width: 300px; background: var(--bg-panel); border-radius: var(--card-radius); box-shadow: var(--shadow-md); max-height: 300px; overflow-y: auto; display: none; z-index: 200; }
+.topbar-left { display: flex; align-items: center; gap: 18px; }
+.hamburger {
+  display: none;
+  font-size: 22px;
+  cursor: pointer;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  align-items: center;
+  justify-content: center;
+}
+.hamburger:hover { background: rgba(255,255,255,0.16); }
+
+.topbar-logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-logo-icon {
+  background: #fff;
+  color: var(--brand-main);
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px -6px rgba(0,0,0,0.35);
+}
+.topbar-search { position: relative; width: 320px; z-index: 110; }
+.topbar-search input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.topbar-search input::placeholder { color: rgba(255,255,255,0.78); }
+.topbar-search input:focus {
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.45);
+}
+.topbar-search .search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  pointer-events: none;
+}
+.topbar-search-results {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  width: 320px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  max-height: 320px;
+  overflow-y: auto;
+  display: none;
+  z-index: 200;
+  padding: 6px;
+}
 .topbar-search-results.show { display: block; }
-.topbar-search-results div { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
+.topbar-search-results div {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 10px;
+  color: var(--text-main);
+  transition: background 0.15s;
+}
 .topbar-search-results div:hover { background: var(--hover-bg); }
 
-.topbar-right { display: flex; align-items: center; gap: 20px; }
-.top-icon { font-size: 20px; cursor: pointer; }
-.top-avatar { width: 36px; height: 36px; border-radius: 50%; background: #fff; object-fit: cover; border: 2px solid rgba(255,255,255,0.5); cursor: pointer; }
+.topbar-right { display: flex; align-items: center; gap: 6px; }
+.top-icon {
+  font-size: 18px;
+  cursor: pointer;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  transition: background 0.18s;
+}
+.top-icon:hover { background: rgba(255,255,255,0.16); }
+.top-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.55);
+  cursor: pointer;
+  margin-left: 4px;
+}
 
-/* Body Layout */
 .layout-body { display: flex; flex: 1; overflow: hidden; }
 
-/* Sidebar */
 .sidebar {
-  width: 250px;
+  width: 262px;
   background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  padding: 14px 0;
+  transition: transform 0.25s ease;
+}
+.nav-section {
+  padding: 16px 24px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
 }
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 11px 16px;
+  margin: 2px 12px;
   cursor: pointer;
   color: var(--text-main);
   font-weight: 500;
-  border-left: 3px solid transparent;
-  transition: all 0.2s;
+  border-radius: 12px;
+  transition: all 0.18s ease;
+  font-size: 13.5px;
 }
 .nav-item:hover { background-color: var(--hover-bg); }
 .nav-item.active {
   background-color: var(--active-bg);
   color: var(--active-text);
-  border-left-color: var(--brand-main);
-  font-weight: bold;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-main) 18%, transparent);
 }
-.nav-icon { font-size: 18px; width: 24px; text-align: center; }
-.nav-section { padding: 15px 20px 5px; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border-color); padding: 10px 0; }
-.user-profile-small { display: flex; align-items: center; gap: 10px; padding: 10px 20px; }
-.user-profile-small img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
-.user-profile-small .info { display: flex; flex-direction: column; }
-.user-profile-small .name { font-weight: bold; font-size: 13px; }
+.nav-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  display: grid;
+  place-items: center;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  padding: 12px 0 4px;
+}
+.user-profile-small {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 0 12px;
+  border-radius: 14px;
+  background: var(--hover-bg);
+}
+.user-profile-small img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+.user-profile-small .info { display: flex; flex-direction: column; min-width: 0; }
+.user-profile-small .name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-profile-small .role { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
 
-/* Main Content */
 .main-content {
   flex: 1;
-  padding: 24px;
+  padding: 26px 32px 40px;
   overflow-y: auto;
+  background: var(--bg-body);
 }
-.page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
-.page-title { font-size: 20px; font-weight: bold; margin: 0; color: var(--text-main); }
-.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.page-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+}
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.view { animation: viewFade 0.35s ease; }
+@keyframes viewFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* ============ COMPONENTS ============ */
+/* ===== COMPONENTS ===== */
 .card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--card-radius);
-  padding: 20px;
+  padding: 22px;
   margin-bottom: 20px;
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.25s, border-color 0.25s;
 }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-.card-title { font-size: 16px; font-weight: bold; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
+.card:hover { box-shadow: var(--shadow-md); }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
 .kpi-box {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
@@ -208,113 +453,297 @@ body {
   padding: 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
 }
-.kpi-icon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; }
-.kpi-icon.blue { background: var(--blue-bg); color: var(--blue); }
-.kpi-icon.green { background: var(--ok-bg); color: var(--ok); }
-.kpi-icon.red { background: var(--bad-bg); color: var(--bad); }
+.kpi-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, color-mix(in srgb, var(--brand-main) 6%, transparent), transparent 62%);
+  pointer-events: none;
+}
+.kpi-box:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.kpi-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.kpi-icon.blue   { background: var(--blue-bg); color: var(--blue); }
+.kpi-icon.green  { background: var(--ok-bg);   color: var(--ok); }
+.kpi-icon.red    { background: var(--bad-bg);  color: var(--bad); }
 .kpi-icon.orange { background: var(--warn-bg); color: var(--warn); }
-.kpi-info .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-.kpi-info .value { font-size: 24px; font-weight: bold; color: var(--text-main); }
+.kpi-info .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.6px; }
+.kpi-info .value { font-size: 24px; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; }
 
-/* Forms & Inputs */
 input[type="text"], input[type="number"], input[type="password"], select, textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--border-color);
   border-radius: var(--btn-radius);
   background: var(--bg-panel);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 13.5px;
+  font-family: inherit;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
 }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand-main); }
-.btn { padding: 10px 16px; border: none; border-radius: var(--btn-radius); font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-.btn-primary { background: var(--brand-main); color: #fff; }
-.btn-primary:hover { background: var(--brand-main-hover); }
-.btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
-.btn-outline:hover { background: var(--hover-bg); }
-.btn-danger { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad); }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn-whatsapp { background: #25D366; color: #fff; border: none; }
-.btn-whatsapp:hover { background: #128C7E; }
+/* FIX #8a: cap input radii so pill mode doesn't break form controls */
+input[type="text"], input[type="number"], input[type="password"], select {
+  border-radius: min(var(--btn-radius), 16px);
+}
+textarea {
+  border-radius: min(var(--btn-radius), 20px);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--brand-main);
+  box-shadow: var(--ring);
+}
+
+.btn {
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--btn-radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-main), var(--brand-main-hover));
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+}
+.btn-primary:hover { filter: brightness(1.07); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); filter: brightness(0.98); }
+.btn-outline {
+  background: var(--bg-panel);
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+.btn-outline:hover { background: var(--hover-bg); border-color: var(--border-strong); }
+.btn-danger {
+  background: var(--bad-bg);
+  color: var(--bad);
+  border: 1px solid transparent;
+}
+.btn-danger:hover { background: color-mix(in srgb, var(--bad) 18%, transparent); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-whatsapp {
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  color: #fff;
+  border: none;
+}
+.btn-whatsapp:hover { filter: brightness(1.05); transform: translateY(-1px); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-/* Tables */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
-th { background: var(--bg-body); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-tr:hover td { background: var(--hover-bg); }
-
-/* Mark Entry Specific Table */
-.entry-tbl input[type="number"] {
-  padding: 6px 8px;
-  font-size: 14px;
-  text-align: center;
-  font-weight: bold;
-  width: 80px;
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
   border: 1px solid var(--border-color);
 }
-.entry-tbl input[type="number"].empty { background: var(--warn-bg); border-color: var(--warn); }
-.entry-tbl input[type="number"]:disabled { background: var(--bg-body); cursor: not-allowed; }
-.entry-tbl td.conv-cell { font-weight: bold; color: var(--brand-main); text-align: center; }
-.entry-tbl td.total-cell { font-weight: bold; color: var(--text-main); text-align: center; background: var(--hover-bg); }
+table { width: 100%; border-collapse: collapse; }
+th, td {
+  padding: 13px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+}
+th {
+  background: var(--hover-bg);
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.8px;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.15s; }
+tbody tr:hover td { background: var(--hover-bg); }
+.num { font-variant-numeric: tabular-nums; }
+
+.entry-tbl { border: none; }
+.entry-tbl input[type="text"] {
+  padding: 8px 10px;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 700;
+  width: 84px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  transition: all 0.18s;
+}
+.entry-tbl input.empty { background: var(--warn-bg); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.entry-tbl input.invalid-mark { background: var(--bad-bg); border-color: var(--bad); color: var(--bad); }
+.entry-tbl input:focus { box-shadow: var(--ring); }
+.entry-tbl input:disabled { background: var(--hover-bg); cursor: not-allowed; opacity: 0.7; }
+.entry-tbl td.conv-cell { font-weight: 800; color: var(--brand-main); text-align: center; }
+.entry-tbl td.total-cell { font-weight: 800; color: var(--text-main); text-align: center; background: var(--hover-bg); }
 .entry-tbl tr.filled td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
-.ab-label { font-size: 11px; color: var(--bad); font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; margin-top: 5px; }
-.ab-label input { width: auto; margin: 0; }
+.ab-label {
+  font-size: 11px;
+  color: var(--bad);
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 6px;
+}
+.ab-label input { width: auto; margin: 0; cursor: pointer; }
 
-/* Tabs */
-.tabs { display: flex; gap: 5px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; }
-.tab { padding: 10px 20px; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; }
-.tab:hover { color: var(--text-main); }
-.tab.active { color: var(--brand-main); border-bottom-color: var(--brand-main); }
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 9px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 10px;
+  white-space: nowrap;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.tab:hover { color: var(--text-main); background: color-mix(in srgb, var(--bg-panel) 55%, transparent); }
+.tab.active {
+  color: var(--brand-main);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-sm);
+  font-weight: 700;
+}
 
-/* Badges */
-.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; }
+.badge {
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.2px;
+}
 .badge-pass { background: var(--ok-bg); color: var(--ok); }
 .badge-fail { background: var(--bad-bg); color: var(--bad); }
-.badge-abs { background: var(--bg-body); color: var(--text-muted); }
-.band-chip { background: var(--bg-body); border: 1px solid var(--border-color); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 4px; display: inline-block; }
+.badge-abs  { background: var(--hover-bg); color: var(--text-muted); }
+.band-chip {
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin-right: 4px;
+  display: inline-block;
+}
 
-/* Charts Grid */
-.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px; }
-.chart-box { border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 15px; background: var(--bg-panel); }
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
+}
+.chart-box {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 18px;
+  background: var(--bg-panel);
+}
 .chart-title { font-weight: 700; font-size: 13px; margin-bottom: 10px; color: var(--text-main); }
 .chart-svg { width: 100%; height: auto; display: block; }
 
-/* Utility */
 .hint { font-size: 12px; color: var(--text-muted); }
 .text-green { color: var(--ok); }
-.text-red { color: var(--bad); }
+.text-red   { color: var(--bad); }
 .mt-2 { margin-top: 10px; }
 .mb-2 { margin-bottom: 10px; }
-.divider { height: 1px; background: var(--border-color); margin: 15px 0; }
+.divider { height: 1px; background: var(--border-color); margin: 18px 0; }
 
-/* Theme Presets */
 .color-presets { display: flex; gap: 10px; flex-wrap: wrap; }
-.color-btn { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; position: relative; }
-.color-btn:hover { transform: scale(1.1); }
+.color-btn {
+  width: 38px; height: 38px; border-radius: 12px; cursor: pointer;
+  border: 2px solid transparent; transition: 0.2s; position: relative;
+}
+.color-btn:hover { transform: scale(1.08); }
 .color-btn.active { border-color: var(--text-main); box-shadow: 0 0 0 2px var(--bg-panel) inset; }
 .shape-presets { display: flex; gap: 10px; flex-wrap: wrap; }
-.shape-btn { padding: 8px 16px; border: 1px solid var(--border-color); cursor: pointer; background: var(--bg-panel); font-weight: 600; font-size: 12px; transition: 0.2s; }
+.shape-btn {
+  padding: 8px 18px; border: 1px solid var(--border-color); cursor: pointer;
+  background: var(--bg-panel); font-weight: 600; font-size: 12px;
+  transition: 0.2s; font-family: inherit; color: var(--text-main);
+}
 .shape-btn.active { border-color: var(--brand-main); color: var(--brand-main); background: var(--active-bg); }
 
-/* Band Table */
 .band-tbl input { padding: 6px; text-align: center; }
 
-/* Bulk Preview Table */
-.preview-tbl tr.ok td { background: rgba(46, 125, 50, 0.1); }
-.preview-tbl tr.err td { background: rgba(198, 40, 40, 0.1); }
-.preview-tbl tr.warn td { background: rgba(239, 108, 0, 0.1); }
+.preview-tbl tr.ok td  { background: color-mix(in srgb, var(--ok) 10%, transparent); }
+.preview-tbl tr.err td { background: color-mix(in srgb, var(--bad) 10%, transparent); }
+.preview-tbl tr.warn td { background: color-mix(in srgb, var(--warn) 10%, transparent); }
 
-/* --- PRINT PREVIEW SPECIFIC STYLES --- */
-.print-form { font-family: Arial, sans-serif; color: #000; background: #fff; padding: 20px; }
-.print-form h2 { text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-size: 18px; }
-.print-form h3 { text-align: center; margin-top: 0; font-size: 14px; font-weight: normal; margin-bottom: 20px; }
+.search-bar-container { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.search-bar-container input {
+  flex: 1; padding: 11px 18px; border-radius: 999px;
+  border: 1px solid var(--border-color); background: var(--bg-body);
+}
+.clear-search {
+  cursor: pointer; font-size: 18px; color: var(--text-muted);
+  padding: 5px; transition: color 0.2s;
+}
+.clear-search:hover { color: var(--bad); }
+
+/* ===== PRINT PREVIEW ===== */
+.print-form {
+  font-family: Arial, sans-serif;
+  color: #000;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+}
+[data-theme="dark"] .print-form {
+  box-shadow: 0 0 0 1px var(--border-strong), var(--shadow-md);
+}
+[data-theme="dark"] .print-form::before {
+  content: '🖨️ Print preview';
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin-bottom: 10px;
+  font-family: 'Inter', sans-serif;
+}
+.print-form h2 {
+  text-align: center; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 5px; font-size: 18px; color: #000;
+}
+.print-form h3 { text-align: center; margin-top: 0; font-size: 14px; font-weight: normal; margin-bottom: 20px; color: #000; }
 .print-form table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-.print-form th, .print-form td { border: 1px solid #000; padding: 6px; text-align: center; font-size: 12px; }
+.print-form th, .print-form td { border: 1px solid #000; padding: 6px; text-align: center; font-size: 12px; color: #000; background: transparent; }
 .print-form th { background: #f0f0f0; font-weight: bold; }
 .print-form .text-left { text-align: left; }
 .print-form input.print-input { border: none; border-bottom: 1px dotted #000; width: auto; padding: 0 5px; background: transparent; font-family: inherit; font-size: 12px; text-align: center; }
@@ -324,15 +753,64 @@ tr:hover td { background: var(--hover-bg); }
   .sidebar, .topbar, .btn, .tabs, .no-print, .page-header, select, .print-header-actions { display: none !important; }
   .layout-body { display: block; }
   .main-content { padding: 0; overflow: visible; }
-  .card { border: none; box-shadow: none; padding: 0; margin: 0; }
-  .print-form { padding: 0; }
+  .card { border: none; box-shadow: none; padding: 0; margin: 0; background: transparent; }
+  .print-form { padding: 0; border-radius: 0; box-shadow: none; }
+  .print-form::before { display: none; }
   .print-form input.print-input { border-bottom: 1px solid #000; }
+  .view { animation: none; }
 }
 
-/* Search Bar in views */
-.search-bar-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-.search-bar-container input { flex: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid var(--border-color); }
-.clear-search { cursor: pointer; font-size: 18px; color: var(--text-muted); padding: 5px; }
+/* ===== MOBILE LAYOUT ===== */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 64px 0 0 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 85;
+  backdrop-filter: blur(2px);
+}
+@media (max-width: 860px) {
+  .hamburger { display: flex; }
+  .sidebar {
+    position: fixed;
+    inset: 64px auto 0 0;
+    transform: translateX(-100%);
+    z-index: 90;
+    box-shadow: var(--shadow-lg);
+    width: 280px;
+  }
+  .sidebar.open { transform: none; }
+  .sidebar.open ~ .sidebar-backdrop,
+  .sidebar-backdrop.show { display: block; }
+  .topbar-search { display: none; }
+  .topbar { padding: 0 14px; }
+  .topbar-logo { font-size: 18px; }
+  .topbar-logo-icon { width: 32px; height: 32px; font-size: 17px; }
+  .main-content { padding: 16px; }
+  .page-title { font-size: 22px; }
+  .page-header { gap: 10px; }
+  .page-header select { width: 100% !important; }
+  .login-card { padding: 32px 24px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-box { padding: 14px; gap: 10px; }
+  .kpi-icon { width: 42px; height: 42px; font-size: 18px; border-radius: 12px; }
+  .kpi-info .value { font-size: 20px; }
+  .card { padding: 16px; }
+  th, td { padding: 10px 12px; font-size: 12px; }
+  .row { gap: 8px; }
+  .btn { padding: 9px 14px; font-size: 12.5px; }
+}
+@media (max-width: 420px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== FIX #8b: PILL SHAPE MODE ===== */
+[data-btn-shape="pill"] .btn       { padding-left: 24px; padding-right: 24px; }
+[data-btn-shape="pill"] .btn-sm    { padding-left: 16px; padding-right: 16px; }
+[data-btn-shape="pill"] .btn-danger{ padding-left: 20px; padding-right: 20px; }
+[data-btn-shape="pill"] .nav-item  { border-radius: 999px; }
+[data-btn-shape="pill"] .tab       { border-radius: 999px; }
+[data-btn-shape="pill"] .badge     { border-radius: 999px; }
 </style>
 </head>
 <body>
@@ -341,6 +819,7 @@ tr:hover td { background: var(--hover-bg); }
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
     <div class="login-logo">TAMIL</div>
+    <div class="login-subtitle">Internal Marks Manager</div>
     <form onsubmit="event.preventDefault(); attemptLogin();">
       <input id="loginUser" type="text" placeholder="Username" autocomplete="username" oninput="document.getElementById('loginError').style.display='none'">
       <div class="password-wrapper">
@@ -350,20 +829,20 @@ tr:hover td { background: var(--hover-bg); }
       <div id="loginError" class="login-error"></div>
       <button type="submit" class="login-btn">Log In</button>
     </form>
-    <div class="hint" style="text-align:center; margin-top:20px;">Welcome</div>
+    <div class="hint" style="text-align:center; margin-top:22px;">Secured access · Staff only</div>
   </div>
 </div>
 
 <!-- ==================== APP ==================== -->
 <div id="appScreen" class="app-container">
-  
   <header class="topbar">
     <div class="topbar-left">
+      <div class="hamburger" onclick="toggleMobileSidebar()" title="Menu">☰</div>
       <div class="topbar-logo">
         <div class="topbar-logo-icon">T</div> Tamil
       </div>
       <div class="topbar-search">
-        <span class="search-icon">helo</span>
+        <span class="search-icon">🔍</span>
         <input type="text" id="globalSearch" placeholder="Search student by name or reg no..." oninput="handleGlobalSearch(this.value)">
         <div id="globalSearchResults" class="topbar-search-results"></div>
       </div>
@@ -376,51 +855,27 @@ tr:hover td { background: var(--hover-bg); }
   </header>
 
   <div class="layout-body">
-    
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="nav-section">Main Menu</div>
-      <div class="nav-item active" data-view="dashboard" onclick="nav('dashboard')">
-        <span class="nav-icon">🏠</span> Dashboard
-      </div>
-      <div class="nav-item" data-view="classes" onclick="nav('classes')">
-        <span class="nav-icon">🏫</span> Classes & Students
-      </div>
-      <div class="nav-item" data-view="entry" onclick="nav('entry')">
-        <span class="nav-icon">✍️</span> Marks Entering
-      </div>
-      <div class="nav-item" data-view="bulk" onclick="nav('bulk')">
-        <span class="nav-icon">📥</span> Bulk Upload
-      </div>
-      <div class="nav-item" data-view="stats" onclick="nav('stats')">
-        <span class="nav-icon">📊</span> Analytics
-      </div>
-      <div class="nav-item" data-view="merit" onclick="nav('merit')">
-        <span class="nav-icon">🏆</span> Merit List
-      </div>
-      <div class="nav-item" data-view="test_analysis" onclick="nav('test_analysis')">
-        <span class="nav-icon">📉</span> Test Result Analysis
-      </div>
-      <div class="nav-item" data-view="print" onclick="nav('print')">
-        <span class="nav-icon">🖨️</span> Print / Export
-      </div>
-      
+      <div class="nav-item active" data-view="dashboard" onclick="nav('dashboard')"><span class="nav-icon">🏠</span> Dashboard</div>
+      <div class="nav-item" data-view="classes" onclick="nav('classes')"><span class="nav-icon">🏫</span> Classes & Students</div>
+      <div class="nav-item" data-view="entry" onclick="nav('entry')"><span class="nav-icon">✍️</span> Marks Entering</div>
+      <div class="nav-item" data-view="bulk" onclick="nav('bulk')"><span class="nav-icon">📥</span> Bulk Upload</div>
+      <div class="nav-item" data-view="stats" onclick="nav('stats')"><span class="nav-icon">📊</span> Analytics</div>
+      <div class="nav-item" data-view="merit" onclick="nav('merit')"><span class="nav-icon">🏆</span> Merit List</div>
+      <div class="nav-item" data-view="test_analysis" onclick="nav('test_analysis')"><span class="nav-icon">📉</span> Test Result Analysis</div>
+      <div class="nav-item" data-view="print" onclick="nav('print')"><span class="nav-icon">🖨️</span> Print / Export</div>
       <div class="nav-section" style="margin-top:20px">System</div>
-      <div class="nav-item" data-view="settings" id="navSettings" onclick="nav('settings')">
-        <span class="nav-icon">⚙️</span> Settings
-      </div>
-      <div class="nav-item" data-view="audit" id="navAudit" onclick="nav('audit')">
-        <span class="nav-icon">📜</span> Audit Log
-      </div>
-      
+      <div class="nav-item" data-view="settings" id="navSettings" onclick="nav('settings')"><span class="nav-icon">⚙️</span> Settings</div>
+      <div class="nav-item" data-view="audit" id="navAudit" onclick="nav('audit')"><span class="nav-icon">📜</span> Audit Log</div>
       <div class="sidebar-bottom">
         <div class="user-profile-small" id="userInfo"></div>
-        <div class="nav-item" onclick="logout()" style="color:var(--bad); border-left:none; margin-top:5px;">
-          <span class="nav-icon">🚪</span> Logout
-        </div>
+        <div class="nav-item" onclick="logout()" style="color:var(--bad); border-left:none; margin-top:5px;"><span class="nav-icon">🚪</span> Logout</div>
       </div>
     </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
 
-    <main class="main-content">
+    <main class="main-content" id="mainContent">
       <div class="page-header">
         <div>
           <h1 class="page-title" id="viewTitle">Dashboard</h1>
@@ -450,7 +905,7 @@ tr:hover td { background: var(--hover-bg); }
 
 <script>
 /* =========================================================
-   DEFAULT SCHEME & CONSTANTS
+   CONSTANTS
    ========================================================= */
 const SCHEME = {
   I: {
@@ -473,7 +928,14 @@ const SCHEME = {
     ]
   }
 };
-const INTERNAL_MAX = 40;
+const DEFAULT_INTERNAL_MAX = 40;
+
+// FIX #26: dynamic internal max per class
+function getInternalMax(c) {
+  const comps = getClassComps(c);
+  const sum = comps.reduce((acc, cp) => acc + Number(cp.max || 0), 0);
+  return sum > 0 ? sum : DEFAULT_INTERNAL_MAX;
+}
 
 const DEFAULT_BANDS = [
   { min:90,  max:100,  val:90 },
@@ -503,17 +965,13 @@ function seedUsers() {
     localStorage.setItem(USERS_KEY, JSON.stringify(DEFAULT_USERS));
   }
 }
-
-function getUsers() { 
-  try { 
-    const users = JSON.parse(localStorage.getItem(USERS_KEY)); 
+function getUsers() {
+  try {
+    const users = JSON.parse(localStorage.getItem(USERS_KEY));
     if (!users || !Array.isArray(users) || users.length === 0) return DEFAULT_USERS;
     return users;
-  } catch(e) { 
-    return DEFAULT_USERS; 
-  } 
+  } catch(e) { return DEFAULT_USERS; }
 }
-
 function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
 function getSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch(e) { return null; } }
 function isAdmin() { const s = getSession(); return s && s.role === 'admin'; }
@@ -537,10 +995,9 @@ const state = {
   testAnalysisTime: '',
   testAnalysisT1: 'cia1',
   testAnalysisT2: 'cia2',
-  searchQuery: '', // For filtering in Marks Entry
-  globalSearchQuery: '', // For Topbar Search
-  auditLog: [], // Audit Log
-  ui: { brandColor: '#e53935', btnRadius: '6px', cardRadius: '8px' },
+  searchQuery: '',
+  auditLog: [],
+  ui: { brandColor: '#e53935', btnRadius: '12px', cardRadius: '20px' },
   settings: { bandsEnabled: true, passPercent: 50, bands: DEFAULT_BANDS.map(b=>({...b})) }
 };
 
@@ -565,42 +1022,62 @@ function load() {
       state.testAnalysisT1 = s.testAnalysisT1 || 'cia1';
       state.testAnalysisT2 = s.testAnalysisT2 || 'cia2';
       state.auditLog = s.auditLog || [];
-      state.ui = Object.assign({ brandColor: '#e53935', btnRadius: '6px', cardRadius: '8px' }, s.ui || {});
+      state.ui = Object.assign({ brandColor: '#e53935', btnRadius: '12px', cardRadius: '20px' }, s.ui || {});
       state.settings = Object.assign({ bandsEnabled: true, passPercent: 50, bands: DEFAULT_BANDS.map(b=>({...b})) }, s.settings || {});
+      if (state.ui.btnRadius === '6px') state.ui.btnRadius = '12px';
+      if (state.ui.cardRadius === '8px') state.ui.cardRadius = '20px';
       state.classes.forEach(c => {
         c.students = c.students || [];
-        c.students.forEach(st => { 
-          st.marks = st.marks || {}; 
-          st.phone = st.phone || ''; 
-        });
+        c.students.forEach(st => { st.marks = st.marks || {}; st.phone = st.phone || ''; });
         if(!c.comps || !c.comps.length) {
           c.comps = SCHEME[c.year] ? JSON.parse(JSON.stringify(SCHEME[c.year].comps)) : [];
         }
-        if(!c.createdBy) c.createdBy = 'admin'; 
+        if(!c.createdBy) c.createdBy = 'admin';
       });
     }
   } catch(e) { console.error("Load error", e); }
 }
 
-function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {} }
+let saveTimeout;
+function save() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try {
+      const json = JSON.stringify(state);
+      if (json.length > 4 * 1024 * 1024) {
+        console.warn('Storage approaching quota:', (json.length / 1024 / 1024).toFixed(2), 'MB');
+      }
+      localStorage.setItem(STORE_KEY, json);
+    } catch(e) {
+      console.error("Save error", e);
+      try { toast('⚠️ Could not save — storage full. Consider deleting old classes or a backup.'); } catch(_) {}
+    }
+  }, 300);
+}
+
+window.addEventListener('beforeunload', () => {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+});
 
 function logAction(action, details) {
-  const log = { time: new Date().toLocaleString(), user: getSession().username, action, details };
+  const s = getSession(); if(!s) return;
+  const log = { time: new Date().toLocaleString(), user: s.username, action, details };
   state.auditLog.unshift(log);
   if (state.auditLog.length > 500) state.auditLog.pop();
   save();
 }
-
 function getVisibleClasses() {
-  const s = getSession();
-  if (!s) return [];
+  const s = getSession(); if (!s) return [];
   if (s.role === 'admin') return state.classes;
   return state.classes.filter(c => c.createdBy === s.username);
 }
 function activeClass() { return getVisibleClasses().find(c => c.id === state.activeClassId) || null; }
 
 /* =========================================================
-   HELPERS & UI UTILS
+   HELPERS
    ========================================================= */
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function esc(s) { return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
@@ -613,12 +1090,24 @@ function roundMarks(v) {
   return Math.round(v*100)/100;
 }
 
+const activeToasts = [];
+function repositionToasts() { activeToasts.forEach((t, i) => { t.style.bottom = (24 + i * 58) + 'px'; }); }
 function toast(msg) {
   const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:6px;z-index:9999;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+  t.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:14px;z-index:9999;font-weight:600;box-shadow:0 12px 30px -10px rgba(0,0,0,0.4);font-family:Inter,sans-serif;font-size:13px;transition:opacity .3s, bottom .2s;max-width:90vw;';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(()=> { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(()=>t.remove(), 300); }, 2500);
+  activeToasts.push(t);
+  repositionToasts();
+  setTimeout(()=> {
+    t.style.opacity = '0';
+    setTimeout(()=>{
+      const idx = activeToasts.indexOf(t);
+      if (idx > -1) activeToasts.splice(idx, 1);
+      t.remove();
+      repositionToasts();
+    }, 300);
+  }, 2500);
 }
 
 function applyUI() {
@@ -631,12 +1120,22 @@ function applyUI() {
   document.documentElement.style.setProperty('--brand-main-hover', `rgb(${Math.floor(r)},${Math.floor(g)},${Math.floor(b)})`);
   document.documentElement.style.setProperty('--btn-radius', state.ui.btnRadius);
   document.documentElement.style.setProperty('--card-radius', state.ui.cardRadius);
+  // FIX #8c: pill-shape attribute for shape-scoped styles
+  document.documentElement.setAttribute('data-btn-shape',
+    state.ui.btnRadius === '999px' ? 'pill' :
+    state.ui.btnRadius === '0px' ? 'sharp' : 'rounded');
 }
-
 function toggleTheme() { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyUI(); save(); }
 function togglePasswordVisibility() {
   const p = document.getElementById('loginPass');
   p.type = p.type === 'password' ? 'text' : 'password';
+}
+
+function toggleMobileSidebar() {
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sidebarBackdrop');
+  const open = sb.classList.toggle('open');
+  bd.classList.toggle('show', open);
 }
 
 /* =========================================================
@@ -671,12 +1170,14 @@ function showApp() {
 }
 
 /* =========================================================
-   PROFILE PICTURE LOGIC
+   AVATAR
    ========================================================= */
 function triggerAvatarUpload() { document.getElementById('avatarUploadInput').click(); }
 function handleAvatarUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
+  const sess = getSession();
+  if (!sess) { toast('Session expired. Please log in again.'); return; }
 
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -690,7 +1191,7 @@ function handleAvatarUpload(event) {
       ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
       const users = getUsers();
-      const u = users.find(x => x.username === getSession().username);
+      const u = users.find(x => x.username === sess.username);
       if (u) { u.avatar = dataUrl; saveUsers(users); applyPermissions(); toast('Profile picture updated ✅'); }
     };
     img.src = e.target.result;
@@ -702,17 +1203,14 @@ function handleAvatarUpload(event) {
 function applyPermissions() {
   const s = getSession(); const user = currentUser();
   const info = document.getElementById('userInfo');
-  
   if(s && info && user) {
-    const avatarHtml = user.avatar ? `<img src="${user.avatar}" alt="">` : `<div style="width:34px;height:34px;border-radius:50%;background:var(--brand-main);color:#fff;display:grid;place-items:center;font-weight:bold;">${s.username[0].toUpperCase()}</div>`;
+    const avatarHtml = user.avatar ? `<img src="${user.avatar}" alt="">` : `<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--brand-main),var(--brand-main-hover));color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;">${s.username[0].toUpperCase()}</div>`;
     info.innerHTML = `${avatarHtml}<div class="info"><span class="name">${esc(s.username)}</span><span class="role">${s.role}</span></div>`;
   }
-  
   const topAv = document.getElementById('topbarAvatar');
   if(topAv && user) {
-    topAv.innerHTML = user.avatar ? `<img src="${user.avatar}" class="top-avatar">` : `<div class="top-avatar" style="display:grid;place-items:center;font-weight:bold;color:var(--brand-main);background:#fff;font-size:16px;">${s.username[0].toUpperCase()}</div>`;
+    topAv.innerHTML = user.avatar ? `<img src="${user.avatar}" class="top-avatar">` : `<div class="top-avatar" style="display:grid;place-items:center;font-weight:800;color:var(--brand-main);background:#fff;font-size:15px;">${s.username[0].toUpperCase()}</div>`;
   }
-
   document.querySelectorAll('.nav-item[data-view]').forEach(n => {
     if(n.dataset.view === 'settings' || n.dataset.view === 'audit') {
       n.style.display = isAdmin() ? 'flex' : 'none';
@@ -727,41 +1225,45 @@ function handleGlobalSearch(query) {
   const resultsEl = document.getElementById('globalSearchResults');
   if (!query || query.length < 2) {
     resultsEl.classList.remove('show');
+    if (query && query.length === 1) {
+      resultsEl.innerHTML = '<div style="padding:10px; color:var(--text-muted); font-size:12px;">Type 2+ characters…</div>';
+      resultsEl.classList.add('show');
+    }
     return;
   }
   const q = query.toLowerCase();
   const results = [];
-  
-  state.classes.forEach(c => {
+  getVisibleClasses().forEach(c => {
     c.students.forEach(s => {
       if (s.name.toLowerCase().includes(q) || (s.reg && s.reg.toLowerCase().includes(q))) {
         results.push({ cId: c.id, cName: c.name, sId: s.id, sName: s.name, sReg: s.reg });
       }
     });
   });
-
   if (results.length === 0) {
     resultsEl.innerHTML = '<div style="padding:10px; color:var(--text-muted);">No students found.</div>';
   } else {
     resultsEl.innerHTML = results.slice(0, 10).map(r => `
       <div onclick="goToStudent('${r.cId}', '${r.sId}')">
         <b>${esc(r.sName)}</b> <span style="font-size:12px; color:var(--text-muted);">(${esc(r.sReg)})</span>
-        <div style="font-size:11px; color:var(--brand-main);">${esc(r.cName)}</div>
+        <div style="font-size:11px; color:var(--brand-main); font-weight:600;">${esc(r.cName)}</div>
       </div>
     `).join('');
   }
   resultsEl.classList.add('show');
 }
-
 function goToStudent(cId, sId) {
   document.getElementById('globalSearchResults').classList.remove('show');
   document.getElementById('globalSearch').value = '';
+  const targetClass = getVisibleClasses().find(c => c.id === cId);
+  if (!targetClass) { toast('Access Denied'); return; }
   state.activeClassId = cId;
-  state.searchQuery = '';
-  save();
-  nav('entry'); // Go to marks entry to see the student
+  const student = targetClass.students.find(s => s.id === sId);
+  const query = student ? student.reg : '';
+  nav('entry');
+  state.searchQuery = query;
+  renderEntry();
 }
-
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.topbar-search')) {
     document.getElementById('globalSearchResults').classList.remove('show');
@@ -791,11 +1293,17 @@ function nav(v) {
   state.searchQuery = '';
   document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.toggle('active', n.dataset.view === v));
   document.querySelectorAll('.view').forEach(s => s.style.display = (s.id === 'view-' + v) ? 'block' : 'none');
-  
   document.getElementById('viewTitle').textContent = VIEW_TITLES[v][0];
   document.getElementById('viewSub').textContent = VIEW_TITLES[v][1];
-  
-  renderAll(); save(); window.scrollTo({top:0});
+  renderAll(); save();
+  const mc = document.getElementById('mainContent');
+  if (mc) mc.scrollTo({top: 0});
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sidebarBackdrop');
+  if (sb && sb.classList.contains('open')) {
+    sb.classList.remove('open');
+    bd.classList.remove('show');
+  }
 }
 
 function changeGlobalClass(id) {
@@ -805,6 +1313,7 @@ function changeGlobalClass(id) {
   state.statsComp = c ? getClassComps(c)[0]?.key : null;
   state.expandedClassId = null;
   state.searchQuery = '';
+  state.dashboardShowFailed = false;
   save(); renderAll();
 }
 
@@ -859,7 +1368,7 @@ function compStats(cls, cp) {
 }
 
 /* =========================================================
-   CHARTS & EXPORT (DASHBOARD)
+   CHARTS
    ========================================================= */
 function setChartType(t) { state.chartType = t; save(); renderDashboard(); }
 
@@ -892,7 +1401,7 @@ function renderCategoryBarChart(c, category, comps) {
   data.forEach((d,i)=>{
     const x = startX + i*(barW+gap), h = (d.passPct/100)*innerH, y = PAD_T + innerH - h;
     const color = d.appeared === 0 ? 'var(--border-color)' : d.passPct >= 60 ? 'var(--ok)' : d.passPct >= 40 ? 'var(--warn)' : 'var(--bad)';
-    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,2)}" fill="${color}" rx="3"/>`;
+    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,2)}" fill="${color}" rx="4"/>`;
     if(d.appeared > 0) svg += `<text x="${x+barW/2}" y="${y-6}" text-anchor="middle" font-size="10" font-weight="800" fill="var(--text-main)">${d.passPct.toFixed(0)}%</text>`;
     svg += `<text x="${x+barW/2}" y="${H-PAD_B+14}" text-anchor="middle" font-size="9.5" fill="var(--text-main)" font-weight="700">${esc(d.label)}</text>`;
     svg += `<text x="${x+barW/2}" y="${H-PAD_B+25}" text-anchor="middle" font-size="8.5" fill="var(--text-muted)">${d.pass}/${d.appeared}</text>`;
@@ -901,60 +1410,63 @@ function renderCategoryBarChart(c, category, comps) {
   svg += `<line x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${PAD_T+innerH}" stroke="var(--text-muted)" stroke-width="1"/></svg>`;
   return svg;
 }
-
 function renderCategoryCharts(c, comps) {
   const cats = getChartCategories(c.year, comps);
   return `<div class="chart-grid">${cats.map(cat=>`<div class="chart-box"><div class="chart-title">${cat.icon} ${esc(cat.label)}</div>${renderCategoryBarChart(c, cat, comps)}</div>`).join('')}</div>`;
 }
-
 function renderPieChart(c) {
   if(!c.students.length) return '<div class="hint">No students yet.</div>';
-  const threshold = (state.settings.passPercent/100)*INTERNAL_MAX;
+  const threshold = (state.settings.passPercent/100)*getInternalMax(c);
   let pass=0, fail=0, incomplete=0;
   c.students.forEach(s=>{ const r = calc(c, s); if(!r.complete){ incomplete++; return; } if(r.internal >= threshold) pass++; else fail++; });
   const total = c.students.length, R = 78, CX = 100, CY = 100, STROKE = 36, C = 2*Math.PI*R;
-  const segs = []; if(pass>0) segs.push({count:pass, color:'var(--ok)'}); if(fail>0) segs.push({count:fail, color:'var(--bad)'}); if(incomplete>0) segs.push({count:incomplete, color:'var(--border-color)'});
+  const segs = []; if(pass>0) segs.push({count:pass, color:'var(--ok)'}); if(fail>0) segs.push({count:fail, color:'var(--bad)'}); if(incomplete>0) segs.push({count:incomplete, color:'var(--border-strong)'});
   let offset = 0, svg = `<svg viewBox="0 0 200 200" style="width:150px;height:150px; flex-shrink:0;">`;
   segs.forEach(seg=>{ const len = (seg.count/total)*C; svg += `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="${STROKE}" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${CX} ${CY})"/>`; offset += len; });
   const passPct = ((pass/total)*100).toFixed(0);
-  svg += `<text x="${CX}" y="${CY-2}" text-anchor="middle" font-size="26" font-weight="800" fill="var(--text-main)">${passPct}%</text>`;
+  svg += `<text x="${CX}" y="${CY-2}" text-anchor="middle" font-size="26" font-weight="800" fill="var(--text-main)" font-family="Outfit">${passPct}%</text>`;
   svg += `<text x="${CX}" y="${CY+18}" text-anchor="middle" font-size="11" fill="var(--text-muted)" font-weight="600">Pass Rate</text></svg>`;
-  const legend = [{label:'Pass', count:pass, color:'var(--ok)'}, {label:'Fail', count:fail, color:'var(--bad)'}, {label:'Incomplete', count:incomplete, color:'var(--border-color)'}].filter(x=>x.count>0).map(x=>`<div style="display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:5px;"><span style="width:12px; height:12px; border-radius:3px; background:${x.color};"></span><span>${x.label}: <b>${x.count}</b> (${((x.count/total)*100).toFixed(0)}%)</span></div>`).join('');
+  const legend = [{label:'Pass', count:pass, color:'var(--ok)'}, {label:'Fail', count:fail, color:'var(--bad)'}, {label:'Incomplete', count:incomplete, color:'var(--border-strong)'}].filter(x=>x.count>0).map(x=>`<div style="display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:6px;"><span style="width:12px; height:12px; border-radius:4px; background:${x.color};"></span><span>${x.label}: <b>${x.count}</b> (${((x.count/total)*100).toFixed(0)}%)</span></div>`).join('');
   return `<div style="display:flex; align-items:center; gap:20px; justify-content:center; padding:10px;">${svg}<div>${legend}</div></div>`;
 }
-
 function printCharts() {
   const c = activeClass(); if(!c) return;
   const html = `
-    <html><head><title>Charts - ${c.name}</title>
-    <style> 
-      body { font-family: Arial; padding: 20px; } 
-      .chart-grid { display: flex; flex-wrap: wrap; gap: 20px; } 
-      .chart-box { width: 45%; border: 1px solid #ccc; padding: 15px; border-radius: 8px; } 
-      .chart-svg { width: 100%; height: auto; } 
+    <html><head><title>Charts - ${esc(c.name)}</title>
+    <style>
+      /* FIX #1: popup needs CSS vars for SVG colors */
+      :root { --ok:#16a34a; --bad:#dc2626; --warn:#ea580c; --border-color:#e6e9f0; --border-strong:#d4dae5; --text-muted:#64748b; --text-main:#0f172a; }
+      body { font-family: Arial; padding: 20px; }
+      .chart-grid { display: flex; flex-wrap: wrap; gap: 20px; }
+      .chart-box { width: 45%; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
+      .chart-svg { width: 100%; height: auto; }
       h2 { text-align:center; }
     </style></head><body>
-    <h2>${c.name} - Performance Overview</h2>
+    <h2>${esc(c.name)} - Performance Overview</h2>
     <div class="chart-grid">${renderCategoryCharts(c, getClassComps(c))}</div>
-    <script>window.print();<\/script>
+    <script>window.onload = () => { setTimeout(() => window.print(), 300); };<\/script>
     </body></html>`;
   const w = window.open('', '_blank'); w.document.write(html); w.document.close();
 }
 
 /* =========================================================
-   DASHBOARD RENDER
+   DASHBOARD
    ========================================================= */
 function renderDashboardPassFail(c, comps) {
   if(!c || !c.students.length) return '';
   const tabs = [{ key: 'overall', label: 'Overall Internal' }, { key: 'cia', label: 'CIA / Test Combined' }];
   comps.forEach(cp => { if (cp.key !== 'cia1' && cp.key !== 'cia2' && !cp.label.toLowerCase().includes('test')) tabs.push({ key: cp.key, label: cp.label }); });
-  
+
+  // FIX #2: reset stale filter so it doesn't silently show 0/0/0%
+  if (!tabs.some(t => t.key === state.dashboardPassComp)) state.dashboardPassComp = 'overall';
   const activeComp = state.dashboardPassComp || 'overall';
+
   let passCount = 0, failCount = 0, studentList = [];
-  
+  const maxInternal = getInternalMax(c);
+
   if (activeComp === 'overall') {
-    const passMark = (state.settings.passPercent / 100) * INTERNAL_MAX;
-    c.students.forEach(s => { const r = calc(c, s); const isPass = r.internal >= passMark; if (isPass) passCount++; else failCount++; studentList.push({ s, val: r.internal, max: INTERNAL_MAX, isPass }); });
+    const passMark = (state.settings.passPercent / 100) * maxInternal;
+    c.students.forEach(s => { const r = calc(c, s); const isPass = r.internal >= passMark; if (isPass) passCount++; else failCount++; studentList.push({ s, val: r.internal, max: maxInternal, isPass }); });
   } else if (activeComp === 'cia') {
     const ciaComps = comps.filter(x => x.conv);
     const maxCia = ciaComps.reduce((acc, cp) => acc + cp.max, 0);
@@ -974,13 +1486,13 @@ function renderDashboardPassFail(c, comps) {
       });
     }
   }
-  
+
   let displayList = studentList;
   if (state.dashboardShowFailed) displayList = studentList.filter(item => !item.isPass);
 
   const totalAppeared = passCount + failCount; const passPct = totalAppeared ? (passCount / totalAppeared * 100) : 0;
-  const tabHtml = tabs.map(t => `<button class="btn btn-sm ${activeComp === t.key ? 'btn-primary' : 'btn-outline'}" onclick="state.dashboardPassComp='${t.key}'; state.dashboardShowFailed=false; save(); renderDashboard();" style="border-radius:20px; margin-bottom:5px;">${t.label}</button>`).join('');
-  
+  const tabHtml = tabs.map(t => `<button class="btn btn-sm ${activeComp === t.key ? 'btn-primary' : 'btn-outline'}" onclick="state.dashboardPassComp='${t.key}'; state.dashboardShowFailed=false; save(); renderDashboard();" style="border-radius:999px; margin-bottom:5px;">${t.label}</button>`).join('');
+
   const tableRows = displayList.map((item, i) => `<tr><td class="num">${i+1}</td><td>${esc(item.s.reg || '—')}</td><td>${esc(item.s.name)}</td><td class="num">${item.val === 'AB' ? '<span class="badge badge-abs">AB</span>' : fmt(item.val) + ' / ' + item.max}</td><td class="num"><span class="badge ${item.isPass ? 'badge-pass' : 'badge-fail'}">${item.isPass ? 'Pass' : 'Fail'}</span></td></tr>`).join('');
   const printFailBtn = state.dashboardShowFailed ? `<button class="btn btn-sm btn-outline" onclick="printFailedList()">🖨️ Print Failed List</button>` : '';
 
@@ -1007,26 +1519,23 @@ function renderDashboardPassFail(c, comps) {
 
 function printFailedList() {
   const c = activeClass(); if(!c) return;
-  const comps = getClassComps(c);
-  const passMark = (state.settings.passPercent / 100) * INTERNAL_MAX;
+  const passMark = (state.settings.passPercent / 100) * getInternalMax(c);
   const failed = c.students.map(s => { const r = calc(c, s); return { s, r }; }).filter(x => x.r.internal < passMark);
-  
   const rows = failed.map((item, i) => `<tr><td>${i+1}</td><td>${item.s.reg}</td><td>${item.s.name}</td><td>${fmt(item.r.internal)}</td></tr>`).join('');
-  
   const html = `
-    <html><head><title>Failed Students - ${c.name}</title>
+    <html><head><title>Failed Students - ${esc(c.name)}</title>
     <style> body { font-family: Arial; padding: 20px; } table { width:100%; border-collapse:collapse; margin-top:20px; } th,td { border:1px solid #000; padding:8px; text-align:center; } th { background:#eee; } </style>
     </head><body>
-    <h2 style="text-align:center;">${c.name} - Failed Students List</h2>
+    <h2 style="text-align:center;">${esc(c.name)} - Failed Students List</h2>
     <h4 style="text-align:center;">(Below ${state.settings.passPercent}% Overall Internal)</h4>
     <table>
-      <thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Internal Mark (/40)</th></tr></thead>
+      <thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Internal Mark (/${getInternalMax(c)})</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="4">No failed students 🎉</td></tr>'}</tbody>
     </table>
     <div style="display:flex; justify-content:space-between; margin-top:50px;">
       <div>Faculty In-charge</div><div>HOD</div>
     </div>
-    <script>window.print();<\/script>
+    <script>window.onload = () => { setTimeout(() => window.print(), 300); };<\/script>
     </body></html>`;
   const w = window.open('', '_blank'); w.document.write(html); w.document.close();
 }
@@ -1035,14 +1544,15 @@ function renderDashboard() {
   const el = document.getElementById('view-dashboard');
   const c = activeClass();
   if(!getVisibleClasses().length) {
-    el.innerHTML = `<div class="card" style="text-align:center; padding:40px;"><div style="font-size:40px; margin-bottom:10px;">🏫</div><h2>Welcome to Tamil</h2><p class="hint">Add a class to get started.</p><button class="btn btn-primary mt-2" onclick="nav('classes')">+ Add Class</button></div>`;
+    el.innerHTML = `<div class="card" style="text-align:center; padding:48px;"><div style="font-size:44px; margin-bottom:12px;">🏫</div><h2>Welcome to Tamil</h2><p class="hint">Add a class to get started.</p><button class="btn btn-primary mt-2" onclick="nav('classes')">+ Add Class</button></div>`;
     return;
   }
   if(!c) { el.innerHTML = '<div class="card">Please select a class.</div>'; return; }
 
   const comps = getClassComps(c); const total = c.students.length;
   let fullCount = 0, sumInternal = 0, sumCount = 0, internalFailCount = 0;
-  const passMarkInternal = (state.settings.passPercent / 100) * INTERNAL_MAX;
+  const maxInternal = getInternalMax(c);
+  const passMarkInternal = (state.settings.passPercent / 100) * maxInternal;
 
   c.students.forEach(s => {
     const r = calc(c, s);
@@ -1056,24 +1566,23 @@ function renderDashboard() {
   const miniProgs = comps.map(cp => {
     const done = c.students.filter(s => hasMark(s.marks[cp.key])).length;
     const p = total ? (done/total*100) : 0;
-    return `<div style="margin-bottom:12px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px;"><span>${esc(cp.label)}</span><span>${done}/${total}</span></div><div style="height:6px; background:var(--border-color); border-radius:3px; overflow:hidden;"><div style="height:100%; width:${p}%; background:${done===total?'var(--ok)':'var(--brand-main)'};"></div></div></div>`;
+    return `<div style="margin-bottom:12px;"><div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:5px;"><span>${esc(cp.label)}</span><span>${done}/${total}</span></div><div style="height:7px; background:var(--hover-bg); border-radius:999px; overflow:hidden;"><div style="height:100%; width:${p}%; background:${done===total?'var(--ok)':'linear-gradient(90deg,var(--brand-main),var(--brand-main-hover))'}; border-radius:999px; transition:width 0.4s;"></div></div></div>`;
   }).join('');
 
-  // Top 3 Performers
   const sorted = [...c.students].map(s => ({s, r: calc(c, s)})).sort((a,b) => b.r.internal - a.r.internal);
   const top3 = sorted.slice(0, 3).map((item, index) => `
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--border-color);">
       <div style="font-size:20px; width:30px; text-align:center;">${index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</div>
-      <div style="flex:1;"><b>${esc(item.s.name)}</b><br><span style="font-size:11px; color:var(--text-muted);">${esc(item.s.reg)}</span></div>
-      <div style="font-weight:bold; color:var(--brand-main);">${fmt(item.r.internal)} <span style="font-size:11px; color:var(--text-muted);">/40</span></div>
+      <div style="flex:1; min-width:0;"><b>${esc(item.s.name)}</b><br><span style="font-size:11px; color:var(--text-muted);">${esc(item.s.reg)}</span></div>
+      <div style="font-weight:800; color:var(--brand-main);">${fmt(item.r.internal)} <span style="font-size:11px; color:var(--text-muted); font-weight:500;">/${maxInternal}</span></div>
     </div>
   `).join('');
 
   el.innerHTML = `
     <div class="kpi-grid">
       <div class="kpi-box"><div class="kpi-icon blue">👥</div><div class="kpi-info"><div class="label">Total Students</div><div class="value">${total}</div></div></div>
-      <div class="kpi-box"><div class="kpi-icon green">✅</div><div class="kpi-info"><div class="label">Fully Entered</div><div class="value">${fullCount} <span style="font-size:14px; color:var(--text-muted);">/ ${total}</span></div></div></div>
-      <div class="kpi-box"><div class="kpi-icon orange">📊</div><div class="kpi-info"><div class="label">Avg Internal Mark</div><div class="value">${sumCount ? fmt(avgInternal) : '—'} <span style="font-size:14px; color:var(--text-muted);">/ 40</span></div></div></div>
+      <div class="kpi-box"><div class="kpi-icon green">✅</div><div class="kpi-info"><div class="label">Fully Entered</div><div class="value">${fullCount} <span style="font-size:14px; color:var(--text-muted); font-weight:500;">/ ${total}</span></div></div></div>
+      <div class="kpi-box"><div class="kpi-icon orange">📊</div><div class="kpi-info"><div class="label">Avg Internal Mark</div><div class="value">${sumCount ? fmt(avgInternal) : '—'} <span style="font-size:14px; color:var(--text-muted); font-weight:500;">/ ${maxInternal}</span></div></div></div>
       <div class="kpi-box"><div class="kpi-icon red">❌</div><div class="kpi-info"><div class="label">Internal Fails</div><div class="value">${internalFailCount}</div></div></div>
     </div>
 
@@ -1092,7 +1601,6 @@ function renderDashboard() {
         </div>
         ${renderDashboardPassFail(c, comps)}
       </div>
-      
       <div style="flex:1; min-width:250px;">
         <div class="card">
           <div class="card-header"><h3 class="card-title">🏆 Top 3 Performers</h3></div>
@@ -1127,11 +1635,11 @@ function renderClasses() {
       <button class="btn btn-primary" onclick="addClass()">+ Add</button>
     </div>
   </div>`;
-  
+
   const visibleClasses = getVisibleClasses();
   if(!visibleClasses.length) html += '<div class="card" style="text-align:center;">No classes yet.</div>';
   else html += visibleClasses.map(classCardHTML).join('');
-  
+
   html += `<div class="card">
     <div class="card-header"><h3 class="card-title">Backup & Restore</h3></div>
     <div class="row">
@@ -1146,18 +1654,18 @@ function classCardHTML(c) {
   const open = state.expandedClassId === c.id;
   const comps = getClassComps(c);
   const compRows = comps.map((cp, idx) => `<tr><td><input type="text" value="${esc(cp.label)}" onchange="updateClassComp('${c.id}', ${idx}, 'label', this.value)" style="padding:6px;"></td><td><input type="number" value="${cp.rawMax}" onchange="updateClassComp('${c.id}', ${idx}, 'rawMax', this.value)" style="padding:6px;"></td><td><input type="checkbox" ${cp.conv?'checked':''} onchange="updateClassComp('${c.id}', ${idx}, 'conv', this.checked)" style="width:auto;"></td><td><input type="number" value="${cp.max}" ${cp.conv?'':'disabled'} onchange="updateClassComp('${c.id}', ${idx}, 'max', this.value)" style="padding:6px;"></td><td><button class="btn btn-danger btn-sm" onclick="removeClassComp('${c.id}', ${idx})">✕</button></td></tr>`).join('');
-  
-  const studentRows = c.students.map((s, i) => `<tr><td>${i+1}</td><td>${esc(s.reg || '—')}</td><td>${esc(s.name)}</td><td>${esc(s.phone || '—')}</td><td>${isAdmin() || c.createdBy === getSession().username ? `<button class="btn btn-danger btn-sm" onclick="delStudent('${c.id}','${s.id}')">Remove</button>` : '—'}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;">No students</td></tr>';
+
+  const studentRows = c.students.map((s, i) => `<tr><td class="num">${i+1}</td><td>${esc(s.reg || '—')}</td><td>${esc(s.name)}</td><td>${esc(s.phone || '—')}</td><td>${isAdmin() || c.createdBy === getSession().username ? `<button class="btn btn-danger btn-sm" onclick="delStudent('${c.id}','${s.id}')">Remove</button>` : '—'}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;">No students</td></tr>';
 
   return `<div class="card">
     <div class="card-header"><div><h3 class="card-title">${esc(c.name)}</h3><div class="hint">${esc(c.subject||'—')} • ${c.students.length} students</div></div><div class="row"><button class="btn btn-outline" onclick="toggleClass('${c.id}')">${open?'Close':'Manage'}</button><button class="btn btn-primary" onclick="openEntry('${c.id}')">Enter Marks</button>${isAdmin() || c.createdBy === getSession().username ? `<button class="btn btn-danger" onclick="delClass('${c.id}')">Delete</button>` : ''}</div></div>
     ${open ? `<div class="divider"></div>
-    <h4 style="margin-bottom:10px; color:var(--brand-main);">Manage Components</h4>
+    <h4 style="margin-bottom:10px; color:var(--brand-main); font-size:13px; text-transform:uppercase; letter-spacing:1px;">Manage Components</h4>
     <div class="table-wrap"><table><thead><tr><th>Name</th><th>Raw Max</th><th>Convert?</th><th>Conv Max</th><th></th></tr></thead><tbody>${compRows}</tbody></table></div>
     <button class="btn btn-outline btn-sm mt-2" onclick="addClassComp('${c.id}')">+ Add Component</button>
-    
+
     <div class="divider"></div>
-    <h4 style="margin-bottom:10px; color:var(--brand-main);">Students</h4>
+    <h4 style="margin-bottom:10px; color:var(--brand-main); font-size:13px; text-transform:uppercase; letter-spacing:1px;">Students</h4>
     <div class="row mb-2">
       <input type="text" id="newReg_${c.id}" placeholder="Reg No" style="flex:1;">
       <input type="text" id="newName_${c.id}" placeholder="Name" style="flex:2;">
@@ -1186,47 +1694,81 @@ function addClass() {
   state.classes.push(c); state.expandedClassId = c.id; if(!state.activeClassId) state.activeClassId = c.id;
   document.getElementById('clsName').value = ''; logAction('Class Created', `Added class ${name}`); save(); renderAll();
 }
-function delClass(id) { if(!isAdmin()) return; const c = state.classes.find(x => x.id === id); if(!c || !confirm(`Delete class "${c.name}"?`)) return; state.classes = state.classes.filter(x => x.id !== id); if(state.activeClassId === id) state.activeClassId = getVisibleClasses()[0]?.id || null; logAction('Class Deleted', `Deleted class ${c.name}`); save(); renderAll(); }
+function delClass(id) {
+  const c = state.classes.find(x => x.id === id);
+  if (!c) return;
+  if (!isAdmin() && c.createdBy !== getSession().username) return;
+  if(!confirm(`Delete class "${c.name}"?`)) return;
+  state.classes = state.classes.filter(x => x.id !== id);
+  if(state.activeClassId === id) state.activeClassId = getVisibleClasses()[0]?.id || null;
+  logAction('Class Deleted', `Deleted class ${c.name}`); save(); renderAll();
+}
 function toggleClass(id) { state.expandedClassId = (state.expandedClassId === id) ? null : id; renderAll(); }
 function toggleBulk(id) { state.bulkClassId = (state.bulkClassId === id) ? null : id; renderAll(); }
 
-function addStudent(cid) { 
-  const c = state.classes.find(x => x.id === cid); if(!c) return; 
-  const reg = document.getElementById('newReg_'+cid).value.trim(); 
-  const name = document.getElementById('newName_'+cid).value.trim(); 
+function addStudent(cid) {
+  const c = state.classes.find(x => x.id === cid); if(!c) return;
+  const reg = document.getElementById('newReg_'+cid).value.trim();
+  const name = document.getElementById('newName_'+cid).value.trim();
   const phone = document.getElementById('newPhone_'+cid).value.trim();
-  if(!reg || !name) return; 
-  c.students.push({ id: uid(), reg, name, phone, marks: {} }); 
-  logAction('Student Added', `Added ${name} to ${c.name}`); save(); renderAll(); 
+  if(!reg || !name) return;
+  c.students.push({ id: uid(), reg, name, phone, marks: {} });
+  logAction('Student Added', `Added ${name} to ${c.name}`); save(); renderAll();
 }
 
-function delStudent(cid, sid) { if(!isAdmin()) return; const c = state.classes.find(x => x.id === cid); if(!c) return; const s = c.students.find(x=>x.id===sid); c.students = c.students.filter(x => x.id !== sid); logAction('Student Deleted', `Removed ${s.name} from ${c.name}`); save(); renderAll(); }
+function delStudent(cid, sid) {
+  const c = state.classes.find(x => x.id === cid);
+  if (!c) return;
+  if (!isAdmin() && c.createdBy !== getSession().username) return;
+  const s = c.students.find(x=>x.id===sid);
+  if (!s) return;
+  c.students = c.students.filter(x => x.id !== sid);
+  logAction('Student Deleted', `Removed ${s.name} from ${c.name}`); save(); renderAll();
+}
 
-function bulkAdd(cid) { 
-  const c = state.classes.find(x => x.id === cid); if(!c) return; 
-  const txt = document.getElementById('bulkText_'+cid).value; 
-  txt.split('\n').forEach(line => { 
-    const parts = line.split(',').map(s=>s.trim()); 
-    if(parts.length >= 2) c.students.push({ id: uid(), reg: parts[0], name: parts[1], phone: parts[2] || '', marks: {} }); 
-  }); 
+function bulkAdd(cid) {
+  const c = state.classes.find(x => x.id === cid); if(!c) return;
+  const txt = document.getElementById('bulkText_'+cid).value;
+  txt.split('\n').forEach(line => {
+    const parts = line.split(',').map(s=>s.trim());
+    if(parts.length >= 2) c.students.push({ id: uid(), reg: parts[0], name: parts[1], phone: parts[2] || '', marks: {} });
+  });
   logAction('Bulk Students Added', `Bulk added students to ${c.name}`);
-  save(); renderAll(); 
+  save(); renderAll();
+}
+
+function parseCSVLine(line) {
+  const out = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"' && line[i+1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') { inQ = false; }
+      else { cur += ch; }
+    } else {
+      if (ch === '"') inQ = true;
+      else if (ch === ',') { out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+  }
+  out.push(cur.trim());
+  return out;
 }
 
 function importStudentsCSV(event) {
   const file = event.target.files[0]; if(!file) return;
   const cid = event.target.dataset.classId;
   const c = state.classes.find(x => x.id === cid); if(!c) return;
-  
+
   const reader = new FileReader();
   reader.onload = function(e) {
     const text = e.target.result;
-    const lines = text.split('\n').filter(l => l.trim());
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
     let count = 0;
     lines.forEach((line, index) => {
-      if (index === 0 && line.toLowerCase().includes('reg')) return; // skip header
-      const parts = line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
-      if (parts.length >= 2) {
+      if (index === 0 && line.toLowerCase().includes('reg')) return;
+      const parts = parseCSVLine(line);
+      if (parts.length >= 2 && parts[0] && parts[1]) {
         c.students.push({ id: uid(), reg: parts[0], name: parts[1], phone: parts[2] || '', marks: {} });
         count++;
       }
@@ -1242,32 +1784,36 @@ function importStudentsCSV(event) {
 function openEntry(cid) { state.activeClassId = cid; const c = activeClass(); state.activeComp = getClassComps(c)[0]?.key; state.searchQuery = ''; save(); nav('entry'); }
 
 /* =========================================================
-   MARK ENTRY (With Search)
+   MARK ENTRY
    ========================================================= */
 function renderEntry() {
   const el = document.getElementById('view-entry'); const c = activeClass();
   if(!c) { el.innerHTML = '<div class="card">Please select a class.</div>'; return; }
   const comps = getClassComps(c); if(!comps.length) { el.innerHTML = '<div class="card">No components configured.</div>'; return; }
-  if(!state.activeComp) state.activeComp = comps[0].key;
 
-  const tabs = comps.map(cp => { const done = c.students.filter(s=>hasMark(s.marks[cp.key])).length; const isDone = done === c.students.length; return `<div class="tab ${state.activeComp===cp.key?'active':''}" onclick="state.activeComp='${cp.key}'; state.searchQuery=''; save(); renderAll();">${esc(cp.label)} <span class="hint" style="margin-left:6px; font-size:11px; background:var(--bg-body); padding:2px 6px; border-radius:10px; ${isDone?'color:var(--ok);':''}">${done}/${c.students.length}</span></div>`}).join('');
-  const cp = comps.find(x => x.key === state.activeComp);
-  
+  let cp = comps.find(x => x.key === state.activeComp);
+  if (!cp) { cp = comps[0]; state.activeComp = cp.key; }
+
+    const tabs = comps.map(cp => {
+    const done = c.students.filter(s=>hasMark(s.marks[cp.key])).length;
+    const isDone = done === c.students.length;
+    return `<div class="tab ${state.activeComp===cp.key?'active':''}" onclick="state.activeComp='${cp.key}'; state.searchQuery=''; save(); renderAll();">${esc(cp.label)} <span class="hint" style="margin-left:6px; font-size:11px; background:color-mix(in srgb, var(--text-muted) 16%, transparent); padding:2px 7px; border-radius:10px; ${isDone?'color:var(--ok);':''}">${done}/${c.students.length}</span></div>`;
+  }).join('');
+
   let displayStudents = c.students;
   if (state.searchQuery) {
     const q = state.searchQuery.toLowerCase();
     displayStudents = c.students.filter(s => s.name.toLowerCase().includes(q) || (s.reg && s.reg.toLowerCase().includes(q)));
   }
 
-  let head = `<tr><th style="width:45px">#</th><th style="width:120px">Reg No</th><th style="min-width:170px">Name</th><th style="width:130px" class="num">${cp.label}<br><small>/${cp.rawMax}</small></th>${cp.conv ? `<th style="width:110px" class="num">Converted<br><small>/${cp.max}</small></th>` : ''}<th style="width:110px" class="num">Internal Total<br><small>/40</small></th></tr>`;
+  let head = `<tr><th style="width:45px">#</th><th style="width:120px">Reg No</th><th style="min-width:170px">Name</th><th style="width:130px" class="num">${esc(cp.label)}<br><small>/${cp.rawMax}</small></th>${cp.conv ? `<th style="width:110px" class="num">Converted<br><small>/${cp.max}</small></th>` : ''}<th style="width:110px" class="num">Internal Total<br><small>/${getInternalMax(c)}</small></th></tr>`;
 
   const rows = displayStudents.map((s, i) => {
     const r = calc(c, s); const raw = s.marks[cp.key]; const filled = hasMark(raw); const absent = isAbsent(raw);
     let cells = `<td class="num">${i+1}</td><td>${esc(s.reg)}</td><td>${esc(s.name)}</td>
       <td style="text-align:center;">
-        <input type="number" inputmode="decimal" step="0.01" min="0" max="${cp.rawMax}" 
-               class="${filled && !absent ? '' : 'empty'}" value="${filled && !absent ? raw : ''}" 
-               data-sid="${s.id}" data-key="${cp.key}" 
+        <input type="text" inputmode="decimal" class="${filled && !absent ? '' : 'empty'}" value="${filled && !absent ? raw : (absent ? 'AB' : '')}"
+               data-sid="${s.id}" data-key="${cp.key}" data-max="${cp.rawMax}"
                oninput="onCompInput(this)" onkeydown="onCompKey(event,this)" onfocus="this.select()"
                ${absent ? 'disabled' : ''}>
         <br>
@@ -1277,17 +1823,17 @@ function renderEntry() {
       </td>`;
     if(cp.conv) cells += `<td class="conv-cell" id="cv_${s.id}">${fmt(r.comps[cp.key])}</td>`;
     cells += `<td class="total-cell" id="int_${s.id}">${fmt(r.internal)}</td>`;
-    return `<tr class="${filled?'filled':''}">${cells}</tr>`;
+    return `<tr class="${filled?'filled':''}" data-sid="${s.id}">${cells}</tr>`;
   }).join('');
 
   const hasNext = comps.indexOf(cp) < comps.length-1;
   el.innerHTML = `
     <div class="card">
       <div class="tabs">${tabs}</div>
-      
+
       <div class="search-bar-container">
-        <input type="text" placeholder="🔍 Search student by name or reg no..." value="${esc(state.searchQuery)}" oninput="state.searchQuery=this.value; renderEntry();">
-        ${state.searchQuery ? `<span class="clear-search" onclick="state.searchQuery=''; renderEntry();">✕</span>` : ''}
+        <input type="text" id="entrySearch" placeholder="🔍 Search student by name or reg no..." value="${esc(state.searchQuery)}" oninput="filterEntryRows(this.value)">
+        <span id="entrySearchClear" class="clear-search" onclick="clearEntrySearch()" style="${state.searchQuery ? '' : 'display:none'}">✕</span>
       </div>
 
       <div class="table-wrap"><table class="entry-tbl"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
@@ -1298,12 +1844,81 @@ function renderEntry() {
     </div>`;
 }
 
+function filterEntryRows(q) {
+  state.searchQuery = q;
+  const rows = document.querySelectorAll('#view-entry tbody tr[data-sid]');
+  const lq = q.toLowerCase();
+  rows.forEach(tr => {
+    const reg = (tr.children[1]?.textContent || '').toLowerCase();
+    const name = (tr.children[2]?.textContent || '').toLowerCase();
+    tr.style.display = (!lq || reg.includes(lq) || name.includes(lq)) ? '' : 'none';
+  });
+  const clearBtn = document.getElementById('entrySearchClear');
+  if (clearBtn) clearBtn.style.display = q ? 'inline' : 'none';
+}
+function clearEntrySearch() {
+  state.searchQuery = '';
+  const inp = document.getElementById('entrySearch');
+  if (inp) { inp.value = ''; inp.focus(); }
+  filterEntryRows('');
+}
+
 function onCompInput(el) {
-  const c = activeClass(); if(!c) return; const s = c.students.find(x => x.id === el.dataset.sid); if(!s) return;
-  const key = el.dataset.key; s.marks[key] = (el.value === '') ? '' : Number(el.value); save();
-  const cp = getClassComps(c).find(x => x.key === key); const r = calc(c, s); const tr = el.closest('tr');
-  if (cp.conv) { tr.cells[4].textContent = fmt(r.comps[key]); tr.cells[5].textContent = fmt(r.internal); } else { tr.cells[4].textContent = fmt(r.internal); }
-  el.classList.toggle('empty', !hasMark(el.value)); tr.classList.toggle('filled', hasMark(el.value));
+  const c = activeClass(); if(!c) return;
+  const s = c.students.find(x => x.id === el.dataset.sid); if(!s) return;
+  const key = el.dataset.key;
+  const max = Number(el.dataset.max);
+  const val = el.value.trim().toUpperCase();
+  const tr = el.closest('tr');
+  const cb = tr.querySelector('input[type="checkbox"]');
+
+  if (val === 'AB') {
+    s.marks[key] = 'AB';
+    el.classList.remove('invalid-mark');
+    el.classList.add('empty');
+    cb.checked = true;
+    el.disabled = true;
+  } else if (val === '') {
+    s.marks[key] = '';
+    el.classList.remove('invalid-mark');
+    el.classList.add('empty');
+    cb.checked = false;
+  } else if (!isNaN(Number(val))) {
+    const numVal = Number(val);
+    if (numVal < 0 || numVal > max) {
+      el.classList.add('invalid-mark');
+      delete s.marks[key];
+    } else {
+      s.marks[key] = numVal;
+      el.classList.remove('invalid-mark');
+    }
+    cb.checked = false;
+  } else {
+    // FIX #4: preserve AB display when invalid char typed on a pending AB state
+    if (isAbsent(s.marks[key])) {
+      el.value = 'AB';
+      el.disabled = true;
+    } else if (hasMark(s.marks[key])) {
+      el.value = s.marks[key];
+    } else {
+      el.value = '';
+    }
+    return;
+  }
+
+  save();
+  const cp = getClassComps(c).find(x => x.key === key);
+  const r = calc(c, s);
+
+  if (cp.conv) {
+    const cvEl = document.getElementById(`cv_${s.id}`);
+    if (cvEl) cvEl.textContent = fmt(r.comps[key]);
+  }
+  const intEl = document.getElementById(`int_${s.id}`);
+  if (intEl) intEl.textContent = fmt(r.internal);
+
+  el.classList.toggle('empty', !hasMark(s.marks[key]));
+  tr.classList.toggle('filled', hasMark(s.marks[key]));
 }
 
 function toggleAbsent(sid, key, isChecked) {
@@ -1311,38 +1926,77 @@ function toggleAbsent(sid, key, isChecked) {
   const s = c.students.find(x => x.id === sid); if(!s) return;
   if(isChecked) s.marks[key] = 'AB';
   else s.marks[key] = '';
-  save(); renderEntry(); // Only re-render the entry view to keep search focused
+  save();
+
+  const tr = document.querySelector(`tr[data-sid="${sid}"]`);
+  if (!tr) return;
+
+  const inp = tr.querySelector('input[data-key]');
+  const cp = getClassComps(c).find(x => x.key === key);
+  const r = calc(c, s);
+
+  if (isChecked) {
+    inp.value = 'AB';
+    inp.disabled = true;
+    inp.classList.remove('empty', 'invalid-mark');
+    tr.classList.add('filled');
+  } else {
+    inp.value = '';
+    inp.disabled = false;
+    inp.classList.add('empty');
+    tr.classList.remove('filled');
+  }
+
+  if (cp.conv) {
+    const cvEl = document.getElementById(`cv_${sid}`);
+    if (cvEl) cvEl.textContent = fmt(r.comps[key]);
+  }
+  const intEl = document.getElementById(`int_${sid}`);
+  if (intEl) intEl.textContent = fmt(r.internal);
 }
 
 function onCompKey(e, el) {
   if(e.key !== 'Enter') return; e.preventDefault();
-  const inputs = Array.from(document.querySelectorAll('#view-entry input[type="number"]')); const i = inputs.indexOf(el);
-  if(i > -1 && i < inputs.length - 1) { const n = inputs[i+1]; n.focus(); n.select(); n.scrollIntoView({block:'center', behavior:'smooth'}); } else { nextComp(); }
+  const inputs = Array.from(document.querySelectorAll('#view-entry input[data-key]:not([disabled])'));
+  const i = inputs.indexOf(el);
+  if(i > -1 && i < inputs.length - 1) {
+    const n = inputs[i+1];
+    n.focus(); n.select(); n.scrollIntoView({block:'center', behavior:'smooth'});
+  } else {
+    nextComp();
+  }
 }
+
 function nextComp() {
   const c = activeClass(); if(!c) return; const comps = getClassComps(c); const idx = comps.findIndex(x => x.key === state.activeComp);
-  if (idx > -1 && idx < comps.length - 1) { state.activeComp = comps[idx+1].key; state.searchQuery = ''; save(); renderAll(); toast('Next component ➜ ' + comps[idx+1].label); setTimeout(()=>{ const el = document.querySelector('#view-entry input[type="number"]'); if(el) el.focus(); }, 50); } else { toast('All marks entered ✅'); }
+  if (idx > -1 && idx < comps.length - 1) {
+    state.activeComp = comps[idx+1].key; state.searchQuery = ''; save(); renderAll();
+    toast('Next component ➜ ' + comps[idx+1].label);
+    setTimeout(()=>{ const el = document.querySelector('#view-entry input[data-key]'); if(el) el.focus(); }, 50);
+  } else {
+    toast('All marks entered ✅');
+  }
 }
 
 /* =========================================================
-   MERIT LIST & WHATSAPP
+   MERIT LIST
    ========================================================= */
 function renderMerit() {
   const el = document.getElementById('view-merit'); const c = activeClass();
   if(!c) { el.innerHTML = '<div class="card">Please select a class.</div>'; return; }
-  
+  const maxInternal = getInternalMax(c);
   const sorted = c.students.map(s => {
     const r = calc(c, s);
     return { s, r, total: r.internal };
   }).sort((a, b) => b.total - a.total);
 
   const rows = sorted.map((item, i) => {
-    const isPass = item.total >= ((state.settings.passPercent / 100) * INTERNAL_MAX);
+    const isPass = item.total >= ((state.settings.passPercent / 100) * maxInternal);
     return `<tr>
       <td><b>#${i + 1}</b></td>
       <td>${esc(item.s.reg)}</td>
       <td><b>${esc(item.s.name)}</b></td>
-      <td class="num">${fmt(item.total)} / 40</td>
+      <td class="num">${fmt(item.total)} / ${maxInternal}</td>
       <td class="num"><span class="badge ${isPass ? 'badge-pass' : 'badge-fail'}">${isPass ? 'Pass' : 'Fail'}</span></td>
       <td style="text-align:right;">
         <button class="btn btn-sm btn-whatsapp" onclick="shareWhatsApp('${c.id}', '${item.s.id}')">💬 WhatsApp</button>
@@ -1370,44 +2024,55 @@ function shareWhatsApp(cid, sid) {
   const c = state.classes.find(x => x.id === cid); if(!c) return;
   const s = c.students.find(x => x.id === sid); if(!s) return;
   const r = calc(c, s);
-  
+  const maxInternal = getInternalMax(c);
+
   let text = `*${c.name} - Internal Marks*\n`;
   text += `Name: ${s.name}\n`;
   text += `Reg No: ${s.reg}\n\n`;
-  
+
   const comps = getClassComps(c);
   comps.forEach(cp => {
     const raw = s.marks[cp.key];
     const val = isAbsent(raw) ? 'AB' : (hasMark(raw) ? fmt(r.comps[cp.key]) : '-');
     text += `${cp.label}: ${val} / ${cp.max}\n`;
   });
-  
-  text += `\n*Total Internal: ${fmt(r.internal)} / 40*`;
-  text += `\nStatus: ${r.internal >= ((state.settings.passPercent / 100) * INTERNAL_MAX) ? 'PASS' : 'FAIL'}`;
+
+  text += `\n*Total Internal: ${fmt(r.internal)} / ${maxInternal}*`;
+  text += `\nStatus: ${r.internal >= ((state.settings.passPercent / 100) * maxInternal) ? 'PASS' : 'FAIL'}`;
 
   const phone = s.phone ? s.phone.replace(/\D/g, '') : '';
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-  window.open(url, '_blank');
+  const url = phone
+    ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+    : `https://wa.me/?text=${encodeURIComponent(text)}`;
+  // FIX #7: popup-safe open (works even with popup blockers)
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 function printMeritList() {
   const c = activeClass(); if(!c) return;
+  const maxInternal = getInternalMax(c);
   const sorted = c.students.map(s => {
     const r = calc(c, s);
     return { s, r, total: r.internal };
   }).sort((a, b) => b.total - a.total);
 
   const rows = sorted.map((item, i) => {
-    const isPass = item.total >= ((state.settings.passPercent / 100) * INTERNAL_MAX);
+    const isPass = item.total >= ((state.settings.passPercent / 100) * maxInternal);
     return `<tr><td>${i+1}</td><td>${item.s.reg}</td><td>${item.s.name}</td><td>${fmt(item.total)}</td><td>${isPass?'Pass':'Fail'}</td></tr>`;
   }).join('');
 
   const html = `
-    <html><head><title>Merit List - ${c.name}</title>
+    <html><head><title>Merit List - ${esc(c.name)}</title>
     <style> body { font-family: Arial; padding: 20px; } table { width:100%; border-collapse:collapse; margin-top:20px; } th,td { border:1px solid #000; padding:8px; text-align:center; } th { background:#eee; } </style>
     </head><body>
-    <h2 style="text-align:center;">${c.name} - Merit List</h2>
-    <h4 style="text-align:center;">(Ranked by Internal Marks out of 40)</h4>
+    <h2 style="text-align:center;">${esc(c.name)} - Merit List</h2>
+    <h4 style="text-align:center;">(Ranked by Internal Marks out of ${maxInternal})</h4>
     <table>
       <thead><tr><th>Rank</th><th>Reg No</th><th>Name</th><th>Total</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody>
@@ -1415,22 +2080,25 @@ function printMeritList() {
     <div style="display:flex; justify-content:space-between; margin-top:50px;">
       <div>Faculty In-charge</div><div>HOD</div>
     </div>
-    <script>window.print();<\/script>
+    <script>window.onload = () => { setTimeout(() => window.print(), 300); };<\/script>
     </body></html>`;
   const w = window.open('', '_blank'); w.document.write(html); w.document.close();
 }
 
 /* =========================================================
-   ANALYTICS (Stats)
+   ANALYTICS
    ========================================================= */
 function renderStats() {
   const el = document.getElementById('view-stats'); const c = activeClass();
   if(!c) { el.innerHTML = '<div class="card">Please select a class.</div>'; return; }
-  const comps = getClassComps(c); const total = c.students.length;
-  if(!state.statsComp) state.statsComp = comps[0]?.key;
+  const comps = getClassComps(c);
+  if (!comps.length) { el.innerHTML = '<div class="card">No components configured.</div>'; return; }
+
+  let cp = comps.find(x => x.key === state.statsComp);
+  if (!cp) { cp = comps[0]; state.statsComp = cp.key; }
+
   const compRows = comps.map(cp => { const s = compStats(c, cp); return `<tr style="cursor:pointer; ${state.statsComp===cp.key?'background:var(--active-bg);':''}" onclick="state.statsComp='${cp.key}'; save(); renderAll();"><td><b>${esc(cp.label)}</b></td><td class="num">${s.appeared}</td><td class="num text-green">${s.pass}</td><td class="num text-red">${s.fail}</td><td class="num">${s.appeared ? s.passPct.toFixed(1) + '%' : '—'}</td></tr>`; }).join('');
-  const cp = comps.find(x => x.key === state.statsComp);
-  const detailRows = c.students.map((s, i) => { const raw = s.marks[cp.key]; const filled = hasMark(raw); const absent = isAbsent(raw); const passed = filled && !absent && (Number(raw)/cp.rawMax*100 >= state.settings.passPercent); return `<tr><td>${i+1}</td><td>${esc(s.reg)}</td><td>${esc(s.name)}</td><td class="num">${absent ? 'AB' : filled ? fmt(raw) : '—'}</td><td class="num">${!filled ? '<span class="badge badge-abs">Not Entered</span>' : absent ? '<span class="badge badge-abs">Absent</span>' : passed ? '<span class="badge badge-pass">Pass</span>' : '<span class="badge badge-fail">Fail</span>'}</td></tr>`; }).join('');
+  const detailRows = c.students.map((s, i) => { const raw = s.marks[cp.key]; const filled = hasMark(raw); const absent = isAbsent(raw); const passed = filled && !absent && (Number(raw)/cp.rawMax*100 >= state.settings.passPercent); return `<tr><td class="num">${i+1}</td><td>${esc(s.reg)}</td><td>${esc(s.name)}</td><td class="num">${absent ? 'AB' : filled ? fmt(raw) : '—'}</td><td class="num">${!filled ? '<span class="badge badge-abs">Not Entered</span>' : absent ? '<span class="badge badge-abs">Absent</span>' : passed ? '<span class="badge badge-pass">Pass</span>' : '<span class="badge badge-fail">Fail</span>'}</td></tr>`; }).join('');
   el.innerHTML = `<div class="card"><div class="card-header"><h3 class="card-title">Component Statistics</h3></div><div class="table-wrap"><table><thead><tr><th>Component</th><th>Appeared</th><th>Pass</th><th>Fail</th><th>Pass %</th></tr></thead><tbody>${compRows}</tbody></table></div></div><div class="card"><div class="card-header"><h3 class="card-title">${esc(cp.label)} - Student Details</h3></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Mark</th><th>Status</th></tr></thead><tbody>${detailRows}</tbody></table></div></div>`;
 }
 
@@ -1440,16 +2108,14 @@ function renderStats() {
 function getTestAnalysisData(c, cpKey) {
   const cp = getClassComps(c).find(x => x.key === cpKey);
   if(!cp) return { strength: c.students.length, appeared: 0, absent: 0, passed: 0, passPct: '0.00', dist: [0,0,0,0,0,0] };
-  
+
   let appeared = 0, absent = 0, passed = 0;
   let dist = [0, 0, 0, 0, 0, 0];
-  
+
   c.students.forEach(s => {
     const raw = s.marks[cp.key];
-    if (isAbsent(raw)) {
-      absent++;
-      dist[5]++;
-    } else if (hasMark(raw)) {
+    if (isAbsent(raw)) { absent++; dist[5]++; }
+    else if (hasMark(raw)) {
       appeared++;
       const pct = (Number(raw) / cp.rawMax) * 100;
       if (pct >= state.settings.passPercent) passed++;
@@ -1461,18 +2127,16 @@ function getTestAnalysisData(c, cpKey) {
       else dist[5]++;
     }
   });
-  
+
   return {
     strength: c.students.length,
-    appeared,
-    absent,
-    passed,
+    appeared, absent, passed,
     passPct: appeared ? (passed / appeared * 100).toFixed(2) : '0.00',
     dist
   };
 }
 
-function renderTestAnalysisTable(title, data, date, time) {
+function renderTestAnalysisTable(title, data) {
   return `
     <div style="flex:1; min-width:300px;">
       <table style="width:100%; border-collapse:collapse; border:1px solid #000; margin-bottom:20px;">
@@ -1499,8 +2163,11 @@ function renderTestAnalysis() {
   const el = document.getElementById('view-test_analysis');
   const c = activeClass();
   if(!c) { el.innerHTML = '<div class="card">Please select a class.</div>'; return; }
-  
+
   const comps = getClassComps(c);
+  // FIX #3: guard stale T1/T2 selections
+  if (comps.length && !comps.some(cp => cp.key === state.testAnalysisT1)) state.testAnalysisT1 = comps[0].key;
+  if (comps.length && !comps.some(cp => cp.key === state.testAnalysisT2)) state.testAnalysisT2 = comps[0].key;
   const data1 = getTestAnalysisData(c, state.testAnalysisT1);
   const data2 = getTestAnalysisData(c, state.testAnalysisT2);
 
@@ -1522,11 +2189,15 @@ function renderTestAnalysis() {
           </div>
           <div>
             <label style="font-size:12px; font-weight:bold; margin-bottom:5px; display:block;">Date</label>
-            <input type="text" placeholder="e.g. 15-10-2024" value="${state.testAnalysisDate}" oninput="state.testAnalysisDate=this.value; save();" style="width:130px; padding:8px;">
+            <input type="text" placeholder="e.g. 15-10-2024" value="${esc(state.testAnalysisDate)}"
+              oninput="state.testAnalysisDate=this.value; var e=document.getElementById('taDatePreview'); if(e) e.innerHTML=this.value||'&nbsp;'; save();"
+              style="width:130px; padding:8px;">
           </div>
           <div>
             <label style="font-size:12px; font-weight:bold; margin-bottom:5px; display:block;">Time</label>
-            <input type="text" placeholder="e.g. 10:00 AM" value="${state.testAnalysisTime}" oninput="state.testAnalysisTime=this.value; save();" style="width:100px; padding:8px;">
+            <input type="text" placeholder="e.g. 10:00 AM" value="${esc(state.testAnalysisTime)}"
+              oninput="state.testAnalysisTime=this.value; var e=document.getElementById('taTimePreview'); if(e) e.innerHTML=this.value||'&nbsp;'; save();"
+              style="width:100px; padding:8px;">
           </div>
         </div>
         <div>
@@ -1538,10 +2209,10 @@ function renderTestAnalysis() {
     <div class="card print-form">
       <h2>INTERNAL TEST RESULT ANALYSIS</h2>
       <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:13px; font-weight:bold;">
-        <span>Date: <input type="text" class="print-input" value="${esc(state.testAnalysisDate)}" style="width:120px;"></span>
-        <span>Time: <input type="text" class="print-input" value="${esc(state.testAnalysisTime)}" style="width:100px;"></span>
+        <span>Date: <span style="display:inline-block; border-bottom:1px solid #000; min-width:120px; text-align:center;" id="taDatePreview">${esc(state.testAnalysisDate) || '&nbsp;'}</span></span>
+        <span>Time: <span style="display:inline-block; border-bottom:1px solid #000; min-width:100px; text-align:center;" id="taTimePreview">${esc(state.testAnalysisTime) || '&nbsp;'}</span></span>
       </div>
-      
+
       <div style="display:flex; gap:20px; flex-wrap:wrap;">
         ${renderTestAnalysisTable('Test I: ' + (comps.find(x=>x.key===state.testAnalysisT1)?.label || ''), data1)}
         ${renderTestAnalysisTable('Test II: ' + (comps.find(x=>x.key===state.testAnalysisT2)?.label || ''), data2)}
@@ -1551,13 +2222,19 @@ function renderTestAnalysis() {
 }
 
 /* =========================================================
-   PRINT & EXPORT (FORM GENERATORS)
+   PRINT & EXPORT
    ========================================================= */
 function renderPrint() {
   const el = document.getElementById('view-print'); const c = activeClass();
   if(!c) { el.innerHTML = '<div class="card">Please select a class.</div>'; return; }
   const comps = getClassComps(c);
-  
+
+  let current = state.printType;
+  if (current && current.startsWith('comp:')) {
+    const key = current.split(':')[1];
+    if (!comps.some(x => x.key === key)) current = 'internal';
+  }
+
   let opts = `
     <optgroup label="Log Book Formats (Images)">
       <option value="form-outcome">1. Outcome of the CIA</option>
@@ -1565,7 +2242,7 @@ function renderPrint() {
       <option value="form-computation">3. Internal Mark Computation</option>
     </optgroup>
     <optgroup label="Standard Tables">
-      <option value="internal">Internal Marks Summary (/40)</option>
+      <option value="internal">Internal Marks Summary (/${getInternalMax(c)})</option>
       <option value="report_card">Individual Report Card</option>
       ${comps.map(cp => `<option value="comp:${cp.key}">${cp.label} - Mark List</option>`).join('')}
     </optgroup>
@@ -1578,7 +2255,7 @@ function renderPrint() {
         <select id="printType" style="flex:2;" onchange="state.printType=this.value; save(); if(this.value==='report_card') { document.getElementById('rcStudentSel').style.display='block'; } else { document.getElementById('rcStudentSel').style.display='none'; }">${opts}</select>
         <button class="btn btn-primary" onclick="doPrint()">🖨️ Print</button>
       </div>
-      <div id="rcStudentSel" class="row mb-2" style="display:${state.printType==='report_card'?'flex':'none'};">
+      <div id="rcStudentSel" class="row mb-2" style="display:${current==='report_card'?'flex':'none'};">
         <label style="font-weight:bold;">Select Student:</label>
         <select id="rcStudentId" style="flex:1;">
           ${c.students.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.reg)})</option>`).join('')}
@@ -1592,29 +2269,29 @@ function renderPrint() {
       </div>
     </div>
   `;
-  document.getElementById('printType').value = state.printType;
+  document.getElementById('printType').value = current;
+  state.printType = current;
 }
 
 function getExportTableHTML() {
   const c = activeClass(); if(!c) return '';
   const kind = document.getElementById('printType')?.value || state.printType;
   const comps = getClassComps(c);
-  
+  const maxInternal = getInternalMax(c);
+
   if(kind === 'report_card') {
     const sid = document.getElementById('rcStudentId')?.value;
     const s = c.students.find(x => x.id === sid);
     if(!s) return '<div style="text-align:center; padding:20px;">Select a student.</div>';
     const r = calc(c, s);
-    
     let compRows = comps.map(cp => {
       const raw = s.marks[cp.key];
       const val = isAbsent(raw) ? 'AB' : (hasMark(raw) ? fmt(r.comps[cp.key]) : '-');
       return `<tr><td class="text-left">${cp.label}</td><td>${val}</td><td>${cp.max}</td></tr>`;
     }).join('');
-
     return `
       <div class="print-form">
-        <h2>${c.name}</h2>
+        <h2>${esc(c.name)}</h2>
         <h3>Individual Report Card</h3>
         <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:14px;">
           <span><b>Name:</b> ${esc(s.name)}</span>
@@ -1625,7 +2302,7 @@ function getExportTableHTML() {
           <tbody>${compRows}</tbody>
         </table>
         <div style="text-align:right; font-size:16px; margin-bottom:20px;">
-          <b>Total Internal: ${fmt(r.internal)} / 40</b>
+          <b>Total Internal: ${fmt(r.internal)} / ${maxInternal}</b>
         </div>
         <div style="display:flex; justify-content:space-between; margin-top:50px;">
           <div>Faculty In-charge</div><div>HOD</div>
@@ -1633,12 +2310,8 @@ function getExportTableHTML() {
       </div>
     `;
   }
-  
+
   if(kind === 'form-outcome') {
-    let html = `<div class="print-form">
-      <h2>1. Outcome of the CIA</h2>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:30px;">
-    `;
     const getCatStats = (catKeys) => {
       let avgSum = 0, avgCount = 0, passCount = 0, totalAppeared = 0;
       c.students.forEach(s => {
@@ -1659,25 +2332,31 @@ function getExportTableHTML() {
     const testKeys = comps.filter(x=>x.label.toLowerCase().includes('test') || x.label.toLowerCase().includes('cia')).map(x=>x.key);
     const semKeys = comps.filter(x=>x.label.toLowerCase().includes('sem')).map(x=>x.key);
     const asgKeys = comps.filter(x=>x.label.toLowerCase().includes('assign')).map(x=>x.key);
+    const attKeys = comps.filter(x=>x.label.toLowerCase().includes('attend')).map(x=>x.key);
+
     const testStats = getCatStats(testKeys.length ? testKeys : ['cia1']);
     const semStats = getCatStats(semKeys.length ? semKeys : ['sem']);
     const asgStats = getCatStats(asgKeys.length ? asgKeys : ['asg']);
-    const attStats = { avg: '88.50', passPct: '92.10' };
+
+    let attStats = { avg: '0.00', passPct: '0.00' };
+    if (attKeys.length > 0) { attStats = getCatStats(attKeys); }
+    else { attStats = { avg: 'N/A', passPct: 'N/A' }; }
 
     const boxHtml = (title, avg, pass) => `
       <div style="border: 2px solid #000; padding: 15px; margin-bottom:15px; text-align:center;">
         <h4 style="margin:0 0 10px 0; text-transform:uppercase;">${title}</h4>
         <table style="border:none; margin:0;"><tr>
           <td style="border:none; width:50%; text-align:center;"><b>Average Marks</b><br><br><div style="border:1px dashed #000; padding:20px; background:#f9f9f9; font-size:16px;">${avg}</div></td>
-          <td style="border:none; width:50%; text-align:center;"><b>Pass (%)</b><br><br><div style="border:1px dashed #000; padding:20px; background:#f9f9f9; font-size:16px;">${pass}%</div></td>
+          <td style="border:none; width:50%; text-align:center;"><b>Pass (%)</b><br><br><div style="border:1px dashed #000; padding:20px; background:#f9f9f9; font-size:16px;">${pass}${pass !== 'N/A' ? '%' : ''}</div></td>
         </tr></table>
       </div>
     `;
-    html += `
+    return `<div class="print-form">
+      <h2>1. Outcome of the CIA</h2>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:30px;">
         <div>${boxHtml('Test', testStats.avg, testStats.passPct)}${boxHtml('Assignment', asgStats.avg, asgStats.passPct)}</div>
-        <div>${boxHtml('Seminar', semStats.avg, semStats.passPct)}${boxHtml('Attendance (%)', attStats.avg, attStats.passPct)}</div>
+        <div>${boxHtml('Seminar', semStats.avg, semStats.passPct)}${boxHtml('Attendance', attStats.avg, attStats.passPct)}</div>
       </div></div>`;
-    return html;
   }
 
   if(kind === 'form-analysis') {
@@ -1686,8 +2365,8 @@ function getExportTableHTML() {
     return `<div class="print-form">
       <h2>INTERNAL TEST RESULT ANALYSIS</h2>
       <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:13px; font-weight:bold;">
-        <span>Date: <span style="display:inline-block; border-bottom:1px solid #000; min-width:120px;">${esc(state.testAnalysisDate)}</span></span>
-        <span>Time: <span style="display:inline-block; border-bottom:1px solid #000; min-width:100px;">${esc(state.testAnalysisTime)}</span></span>
+        <span>Date: <span style="display:inline-block; border-bottom:1px solid #000; min-width:120px; text-align:center;">${esc(state.testAnalysisDate) || '&nbsp;'}</span></span>
+        <span>Time: <span style="display:inline-block; border-bottom:1px solid #000; min-width:100px; text-align:center;">${esc(state.testAnalysisTime) || '&nbsp;'}</span></span>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
         ${renderTestAnalysisTable('Test I: ' + (comps.find(x=>x.key===state.testAnalysisT1)?.label || ''), data1)}
@@ -1712,18 +2391,11 @@ function getExportTableHTML() {
       const getM = (cp) => cp ? (hasMark(s.marks[cp.key]) ? (isAbsent(s.marks[cp.key]) ? 'AB' : fmt(r.comps[cp.key])) : '-') : '-';
       const total = r.internal;
       const rounded = Math.round(total);
-      const status = absCount > 2 ? 'Ab' : (total >= ((state.settings.passPercent/100)*INTERNAL_MAX) ? 'P' : 'F');
-
+      const status = absCount > 2 ? 'Ab' : (total >= ((state.settings.passPercent/100)*maxInternal) ? 'P' : 'F');
       return `<tr>
-        <td>${s.reg || (i+1)}</td>
-        <td>${absCount > 0 ? absCount : '-'}</td>
-        <td>${attVal}%</td>
-        <td>${getM(test1)}</td>
-        <td>${getM(test2)}</td>
-        <td>${getM(test3)}</td>
-        <td>${getM(sem)}</td>
-        <td>${getM(asg)}</td>
-        <td>${getM(att)}</td>
+        <td>${s.reg || (i+1)}</td><td>${absCount > 0 ? absCount : '-'}</td><td>${attVal}%</td>
+        <td>${getM(test1)}</td><td>${getM(test2)}</td><td>${getM(test3)}</td>
+        <td>${getM(sem)}</td><td>${getM(asg)}</td><td>${getM(att)}</td>
         <td style="font-weight:bold;">${total ? fmt(total) : '-'}</td>
         <td style="font-weight:bold;">${total ? rounded : '-'}</td>
         <td style="font-weight:bold; color:${status==='P'?'#2e7d32':status==='F'?'#c62828':'#777'}">${status}</td>
@@ -1735,17 +2407,11 @@ function getExportTableHTML() {
       <table style="margin-top:20px;">
         <thead>
           <tr>
-            <th rowspan="2">Reg. No</th>
-            <th rowspan="2">No. of Absentees</th>
-            <th rowspan="2">Overall Percentage of Attendance</th>
+            <th rowspan="2">Reg. No</th><th rowspan="2">No. of Absentees</th><th rowspan="2">Overall % Attendance</th>
             <th colspan="6">Marks</th>
-            <th rowspan="2">Total</th>
-            <th rowspan="2">Total Marks (Rounded)</th>
-            <th rowspan="2">P / F / Ab</th>
+            <th rowspan="2">Total</th><th rowspan="2">Rounded</th><th rowspan="2">P / F / Ab</th>
           </tr>
-          <tr>
-            <th>Test I</th><th>Test II</th><th>Test III</th><th>Seminar</th><th>Assignment</th><th>Attendance</th>
-          </tr>
+          <tr><th>Test I</th><th>Test II</th><th>Test III</th><th>Seminar</th><th>Assignment</th><th>Attendance</th></tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
@@ -1754,20 +2420,24 @@ function getExportTableHTML() {
 
   let tableHtml = ''; let title = '';
   if(kind === 'internal') {
-    title = 'Internal Marks Summary (/40)';
+    title = `Internal Marks Summary (/${maxInternal})`;
     tableHtml = `<table border="1" style="width:100%; border-collapse:collapse; text-align:center; font-size:12px;">
       <tr style="background:#eee;"><th>#</th><th>Reg No</th><th>Name</th>${comps.map(cp=>`<th>${cp.label}</th>`).join('')}<th>Total</th></tr>
       ${c.students.map((s,i) => { const r = calc(c,s); return `<tr><td>${i+1}</td><td>${s.reg}</td><td style="text-align:left;">${s.name}</td>${comps.map(cp=>`<td>${isAbsent(s.marks[cp.key]) ? 'AB' : fmt(r.comps[cp.key])}</td>`).join('')}<td><b>${fmt(r.internal)}</b></td></tr>`; }).join('')}
     </table>`;
   } else {
-    const key = kind.split(':')[1]; const cp = comps.find(x=>x.key===key);
+    const key = kind.split(':')[1];
+    const cp = comps.find(x=>x.key===key);
+    if (!cp) {
+      return `<div class="print-form"><p style="text-align:center;color:#c00;">Component not found. Please select another option.</p></div>`;
+    }
     title = `${cp.label} Mark List`;
     tableHtml = `<table border="1" style="width:100%; border-collapse:collapse; text-align:center; font-size:12px;">
       <tr style="background:#eee;"><th>#</th><th>Reg No</th><th>Name</th><th>Mark</th>${cp.conv?'<th>Converted</th>':''}</tr>
       ${c.students.map((s,i) => { const r = calc(c,s); return `<tr><td>${i+1}</td><td>${s.reg}</td><td style="text-align:left;">${s.name}</td><td>${isAbsent(s.marks[key]) ? 'AB' : hasMark(s.marks[key])?fmt(s.marks[key]):'-'}</td>${cp.conv?`<td>${fmt(r.comps[key])}</td>`:''}</tr>`; }).join('')}
     </table>`;
   }
-  
+
   return `<html><head><title>Print</title><style>body{font-family:Arial;} @media print { @page { margin: 15mm; } }</style></head>
   <body>
     <h2 style="text-align:center;">${esc(c.name)}</h2>
@@ -1780,36 +2450,60 @@ function getExportTableHTML() {
 }
 
 function doPrint() {
-  const html = getExportTableHTML();
+  const body = getExportTableHTML();
+  const isFullDoc = body.trim().toLowerCase().startsWith('<html');
+  let html;
+  if (isFullDoc) {
+    html = body.replace('</body>', '<script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body>');
+  } else {
+    html = `<html><head><title>Print</title><style>body{font-family:Arial;padding:20px;} @media print { @page { margin: 15mm; } }</style></head><body>${body}<script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+  }
   const w = window.open('', '_blank');
-  w.document.write(html); w.document.close();
-  w.onload = () => w.print();
+  if (!w) { toast('Please allow pop-ups to print.'); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
+function buildExportWrapper(html, kind) {
+  const isFullDoc = html.trim().toLowerCase().startsWith('<html');
+  if (isFullDoc) return html;
+  if (kind === 'excel') {
+    return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>${html}</body></html>`;
+  }
+  return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>${html}</body></html>`;
 }
 
 function exportExcel() {
   const html = getExportTableHTML();
-  const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>${html}</body></html>`;
+  const template = buildExportWrapper(html, 'excel');
   const blob = new Blob([template], { type: 'application/vnd.ms-excel' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = activeClass().name + '_marks.xls'; a.click();
 }
-
 function exportWord() {
   const html = getExportTableHTML();
-  const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>${html}</body></html>`;
+  const template = buildExportWrapper(html, 'word');
   const blob = new Blob([template], { type: 'application/msword' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = activeClass().name + '_marks.doc'; a.click();
 }
-
+function csvEscape(v) {
+  const s = String(v == null ? '' : v);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
 function exportCSV() {
   const c = activeClass(); if(!c) return;
   const comps = getClassComps(c);
-  let csv = 'RegNo,Name,' + comps.map(cp=>cp.label).join(',') + ',Internal\n';
-  c.students.forEach(s => { const r = calc(c, s); csv += `"${s.reg}","${s.name}",` + comps.map(cp=>isAbsent(s.marks[cp.key]) ? 'AB' : hasMark(s.marks[cp.key])?s.marks[cp.key]:'').join(',') + `,${r.internal}\n`; });
+  let csv = 'RegNo,Name,' + comps.map(cp=>csvEscape(cp.label)).join(',') + ',Internal\n';
+  c.students.forEach(s => {
+    const r = calc(c, s);
+    const marks = comps.map(cp => isAbsent(s.marks[cp.key]) ? 'AB' : hasMark(s.marks[cp.key]) ? s.marks[cp.key] : '');
+    csv += [csvEscape(s.reg), csvEscape(s.name), ...marks.map(csvEscape), r.internal].join(',') + '\n';
+  });
   const blob = new Blob([csv], {type:'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = c.name + '_marks.csv'; a.click();
 }
 
 /* =========================================================
-   SETTINGS & AUDIT LOG
+   SETTINGS
    ========================================================= */
 function renderSettings() {
   const el = document.getElementById('view-settings');
@@ -1821,7 +2515,7 @@ function renderSettings() {
     <div class="card">
       <div class="card-header"><h3 class="card-title">UI Customization</h3></div>
       <div class="mb-2"><label style="font-weight:600; font-size:12px; margin-bottom:8px; display:block;">Theme Color</label><div class="color-presets"><div class="color-btn ${u.brandColor==='#e53935'?'active':''}" style="background:#e53935" onclick="setBrandColor('#e53935')"></div><div class="color-btn ${u.brandColor==='#1e88e5'?'active':''}" style="background:#1e88e5" onclick="setBrandColor('#1e88e5')"></div><div class="color-btn ${u.brandColor==='#43a047'?'active':''}" style="background:#43a047" onclick="setBrandColor('#43a047')"></div><div class="color-btn ${u.brandColor==='#8e24aa'?'active':''}" style="background:#8e24aa" onclick="setBrandColor('#8e24aa')"></div><div class="color-btn ${u.brandColor==='#37474f'?'active':''}" style="background:#37474f" onclick="setBrandColor('#37474f')"></div></div></div>
-      <div class="mb-2"><label style="font-weight:600; font-size:12px; margin-bottom:8px; display:block;">Button Shape</label><div class="shape-presets"><div class="shape-btn ${u.btnRadius==='0px'?'active':''}" style="border-radius:0px" onclick="setBtnShape('0px')">Sharp</div><div class="shape-btn ${u.btnRadius==='6px'?'active':''}" style="border-radius:6px" onclick="setBtnShape('6px')">Rounded</div><div class="shape-btn ${u.btnRadius==='50px'?'active':''}" style="border-radius:50px" onclick="setBtnShape('50px')">Pill</div></div></div>
+      <div class="mb-2"><label style="font-weight:600; font-size:12px; margin-bottom:8px; display:block;">Button Shape</label><div class="shape-presets"><div class="shape-btn ${u.btnRadius==='0px'?'active':''}" style="border-radius:0px" onclick="setBtnShape('0px')">Sharp</div><div class="shape-btn ${u.btnRadius==='12px'?'active':''}" style="border-radius:12px" onclick="setBtnShape('12px')">Rounded</div><div class="shape-btn ${u.btnRadius==='999px'?'active':''}" style="border-radius:999px" onclick="setBtnShape('999px')">Pill</div></div></div>
     </div>
     <div class="card">
       <div class="card-header"><h3 class="card-title">System Settings & Conversion Bands</h3></div>
@@ -1833,6 +2527,7 @@ function renderSettings() {
     </div>
     <div class="card">
       <div class="card-header"><h3 class="card-title">User Management</h3></div>
+      <div class="hint mb-2">⚠️ Passwords are stored locally in plaintext. This is a classroom tool — do not reuse important passwords here.</div>
       <div class="table-wrap"><table><thead><tr><th>Username</th><th>Role</th><th>Action</th></tr></thead><tbody>${getUsers().map((u,i) => `<tr><td>${u.username}</td><td>${u.role}</td><td>${u.role==='admin'?'Protected':`<button class="btn btn-danger btn-sm" onclick="removeUser(${i})">Remove</button>`}</td></tr>`).join('')}</tbody></table></div>
       <div class="row mt-2"><input type="text" id="newUser" placeholder="Username" style="flex:1;"><input type="password" id="newPass" placeholder="Password" style="flex:1;"><button class="btn btn-primary" onclick="addUser()">Add User</button></div>
     </div>`;
@@ -1844,23 +2539,54 @@ function removeBand(i) { state.settings.bands.splice(i, 1); save(); renderSettin
 function resetBands() { if(!confirm('Reset bands to default?')) return; state.settings.bands = DEFAULT_BANDS.map(b=>({...b})); save(); renderSettings(); toast('Bands reset ✅'); }
 function setBrandColor(color) { state.ui.brandColor = color; applyUI(); save(); renderSettings(); document.documentElement.style.setProperty('--active-text', color); }
 function setBtnShape(radius) { state.ui.btnRadius = radius; applyUI(); save(); renderSettings(); }
-function addUser() { const u = document.getElementById('newUser').value; const p = document.getElementById('newPass').value; if(!u || !p) return; const users = getUsers(); if(users.some(x=>x.username===u)) { alert('Exists'); return; } users.push({username:u, password:p, role:'user'}); saveUsers(users); renderAll(); }
+function addUser() { const u = document.getElementById('newUser').value; const p = document.getElementById('newPass').value; if(!u || !p) return; const users = getUsers(); if(users.some(x=>x.username===u)) { toast('Username already exists'); return; } users.push({username:u, password:p, role:'user'}); saveUsers(users); renderAll(); }
 function removeUser(i) { const users = getUsers(); users.splice(i, 1); saveUsers(users); renderAll(); }
-function backup() { const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tamil_backup.json'; a.click(); }
-function restore(input) { const f = input.files[0]; if(!f) return; const r = new FileReader(); r.onload = e => { try { const data = JSON.parse(e.target.result); if(data.classes) { state.classes = data.classes; save(); location.reload(); } } catch(err) { alert('Invalid file'); } }; r.readAsText(f); }
+
+function backup() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tamil_backup.json'; a.click();
+}
+
+function restore(input) {
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data || !Array.isArray(data.classes)) { alert('Invalid backup file format'); return; }
+      for (const cls of data.classes) {
+        if (!cls || typeof cls !== 'object') throw new Error('invalid class');
+        if (!Array.isArray(cls.students)) throw new Error('invalid students');
+        if (!Array.isArray(cls.comps)) throw new Error('invalid comps');
+      }
+      if (data.settings && !Array.isArray(data.settings.bands)) throw new Error('invalid bands');
+      if(!confirm('Are you sure you want to restore? This will overwrite current data.')) return;
+      state.classes = data.classes;
+      if (data.settings && Array.isArray(data.settings.bands)) state.settings = data.settings;
+      if (data.ui && data.ui.brandColor) state.ui = data.ui;
+      if (data.theme) state.theme = data.theme;
+      if (Array.isArray(data.auditLog)) state.auditLog = data.auditLog;
+      save();
+      toast('Backup restored successfully');
+      setTimeout(() => location.reload(), 1000);
+    } catch(err) {
+      alert('Invalid file: ' + (err.message || 'Could not parse JSON.'));
+    }
+    input.value = '';
+  };
+  r.readAsText(f);
+}
+
 function resetAll() { if(confirm('Delete all data?')) { localStorage.removeItem(STORE_KEY); location.reload(); } }
 
 function renderAuditLog() {
   const el = document.getElementById('view-audit');
   if(!isAdmin()) { el.innerHTML = '<div class="card">Access Denied.</div>'; return; }
-  
   const rows = state.auditLog.map(log => `<tr>
-    <td>${log.time}</td>
-    <td><b>${esc(log.user)}</b></td>
+    <td>${log.time}</td><td><b>${esc(log.user)}</b></td>
     <td><span class="badge badge-pass">${esc(log.action)}</span></td>
     <td>${esc(log.details)}</td>
   </tr>`).join('');
-
   el.innerHTML = `
     <div class="card">
       <div class="card-header">
@@ -1868,8 +2594,7 @@ function renderAuditLog() {
         <button class="btn btn-danger btn-sm" onclick="if(confirm('Clear audit log?')){ state.auditLog=[]; save(); renderAuditLog(); }">Clear Log</button>
       </div>
       <div class="table-wrap" style="max-height: 500px;">
-        <table>
-          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+        <table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
           <tbody>${rows || '<tr><td colspan="4" style="text-align:center;">No activities yet.</td></tr>'}</tbody>
         </table>
       </div>
@@ -1899,63 +2624,103 @@ function renderBulk() {
     </div>
     <div id="bulkPreviewWrap"></div>`;
 }
+
 function toggleBulkMode() {
-  const mode = document.getElementById('bulkMode').value; document.getElementById('bulkComp').style.display = mode === 'single' ? 'block' : 'none';
+  const mode = document.getElementById('bulkMode').value;
+  document.getElementById('bulkComp').style.display = mode === 'single' ? 'block' : 'none';
   const hint = document.getElementById('bulkHint');
-  if(mode === 'full') { const c = activeClass(); const comps = getClassComps(c); hint.innerHTML = `<b>Full Sheet Format:</b> RegNo, ${comps.map(cp=>cp.label).join(', ')}<br>Example: 21CS001, 45, AB, 42, 5, 5`; }
-  else hint.innerHTML = `Format: <b>RegNo, Mark</b> (e.g., 21CS001, 45). Use <b>AB</b> for absent.`;
+  const formatSel = document.getElementById('bulkFormat');
+  if(mode === 'full') {
+    formatSel.value = 'reg'; formatSel.disabled = true;
+    const c = activeClass(); const comps = getClassComps(c);
+    hint.innerHTML = `<b>Full Sheet Format:</b> RegNo, ${comps.map(cp=>cp.label).join(', ')}<br>Example: 21CS001, 45, AB, 42, 5, 5`;
+  } else {
+    formatSel.disabled = false;
+    hint.innerHTML = `Format: <b>RegNo, Mark</b> (e.g., 21CS001, 45). Use <b>AB</b> for absent.`;
+  }
 }
+
 function downloadTemplate() {
   const c = activeClass(); if(!c) return; const mode = document.getElementById('bulkMode').value; const comps = getClassComps(c);
-  let csv = mode === 'single' ? "RegNo,Mark\n21CS001,45\n21CS002,AB\n" : "RegNo," + comps.map(cp=>cp.label).join(",") + "\n";
+  let csv = mode === 'single' ? "RegNo,Mark\n21CS001,45\n21CS002,AB\n" : "RegNo," + comps.map(cp=>csvEscape(cp.label)).join(",") + "\n";
   if(mode === 'full') { c.students.slice(0, 3).forEach(s => { csv += s.reg + "," + comps.map(()=>"").join(",") + "\n"; }); }
   const blob = new Blob([csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = c.name + '_bulk_template.csv'; a.click();
 }
+
 function parseBulk() {
   const c = activeClass(); const data = document.getElementById('bulkData').value.trim();
   if(!data) { alert("Please paste some data first."); return; }
-  const lines = data.split('\n').map(l => l.trim()).filter(l => l); const mode = document.getElementById('bulkMode').value;
-  const format = document.getElementById('bulkFormat').value; const comps = getClassComps(c); const compKey = document.getElementById('bulkComp').value;
+  const lines = data.split('\n').map(l => l.trim()).filter(l => l);
+  const mode = document.getElementById('bulkMode').value;
+  const format = document.getElementById('bulkFormat').value;
+  const comps = getClassComps(c);
+  const compKey = document.getElementById('bulkComp').value;
   bulkPreviewData = []; let okCount = 0;
+
   lines.forEach((line, index) => {
-    const parts = line.split(/[\t,]+|\s{2,}/).map(s => s.trim()).filter(s => s); if(parts.length === 0) return;
+    const parts = line.split(/[\t,]+|\s{2,}/).map(s => s.trim()).filter(s => s);
+    if(parts.length === 0) return;
     let reg = '', name = '', markVal = null, student = null;
-    if(format === 'reg') { reg = parts[0]; markVal = parts.length > 1 ? parts[1].toUpperCase() : null; student = c.students.find(s => s.reg.toLowerCase() === reg.toLowerCase()); } 
-    else if(format === 'sno') { const sno = parseInt(parts[0], 10); markVal = parts.length > 1 ? parts[1].toUpperCase() : null; student = c.students[sno - 1]; if(student) { reg = student.reg; name = student.name; } } 
+    if(format === 'reg') { reg = parts[0]; markVal = parts.length > 1 ? parts[1].toUpperCase() : null; student = c.students.find(s => s.reg.toLowerCase() === reg.toLowerCase()); }
+    else if(format === 'sno') { const sno = parseInt(parts[0], 10); markVal = parts.length > 1 ? parts[1].toUpperCase() : null; student = c.students[sno - 1]; if(student) { reg = student.reg; name = student.name; } }
     else if(format === 'markonly') { markVal = parts[0].toUpperCase(); student = c.students[index]; if(student) { reg = student.reg; name = student.name; } }
     if(!student) { bulkPreviewData.push({ reg: reg || 'Unknown', name: name || '—', status: 'err', msg: 'Student not matched', line }); return; }
+
     if(mode === 'single') {
       const cp = comps.find(x => x.key === compKey);
+      if(!cp) { bulkPreviewData.push({ reg, name: student.name, status: 'err', msg: 'Component not found', line }); return; }
+      // FIX #5: blank cell is "missing", not zero
+      if (markVal == null || markVal === '') {
+        bulkPreviewData.push({ reg, name: student.name, status: 'err', msg: 'Missing mark', line });
+        return;
+      }
       if(markVal === 'AB') { bulkPreviewData.push({ reg, name: student.name, status: 'ok', mark: 'AB', cp }); okCount++; }
       else {
         const n = Number(markVal);
-        if(isNaN(n) || markVal === '') bulkPreviewData.push({ reg, name: student.name, status: 'err', msg: 'Invalid Mark', line });
+        if(isNaN(n)) bulkPreviewData.push({ reg, name: student.name, status: 'err', msg: 'Invalid Mark', line });
         else if(n < 0 || n > cp.rawMax) bulkPreviewData.push({ reg, name: student.name, status: 'warn', msg: `Out of range (Max ${cp.rawMax})`, line, mark: n });
         else { bulkPreviewData.push({ reg, name: student.name, status: 'ok', mark: n, cp }); okCount++; }
       }
     } else {
       if(format !== 'reg') { bulkPreviewData.push({ reg, name: student.name, status: 'err', msg: 'Full sheet requires Reg No format', line }); return; }
       const marks = {};
-      comps.forEach((cp, i) => { 
-        const val = parts[i+1] ? parts[i+1].toUpperCase() : '';
-        if(val === 'AB') marks[cp.key] = 'AB';
-        else { const m = Number(val); if(!isNaN(m) && m >= 0 && m <= cp.rawMax) marks[cp.key] = m; }
+      // FIX #6: skip blank cells so they don't become 0
+      comps.forEach((cp, i) => {
+        const rawVal = (parts[i+1] || '').trim();
+        if (!rawVal) return;
+        const val = rawVal.toUpperCase();
+        if (val === 'AB') { marks[cp.key] = 'AB'; return; }
+        const m = Number(val);
+        if (!isNaN(m) && m >= 0 && m <= cp.rawMax) marks[cp.key] = m;
       });
       if(Object.keys(marks).length === 0) bulkPreviewData.push({ reg, name: student.name, status: 'err', msg: 'No valid marks', line });
       else { bulkPreviewData.push({ reg, name: student.name, status: 'ok', marks }); okCount++; }
     }
   });
+
   const wrap = document.getElementById('bulkPreviewWrap');
   if(bulkPreviewData.length === 0) { wrap.innerHTML = '<div class="card" style="text-align:center; color:var(--bad);">No valid data parsed. Check format.</div>'; document.getElementById('btnApplyBulk').disabled = true; return; }
-  let tblHtml = mode === 'single' ? `<table class="preview-tbl"><thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Mark</th><th>Status</th></tr></thead><tbody>${bulkPreviewData.map((d, i) => `<tr class="${d.status}"><td>${i+1}</td><td>${esc(d.reg)}</td><td>${d.name ? esc(d.name) : '—'}</td><td>${d.mark !== undefined ? d.mark : '—'}</td><td>${d.status === 'ok' ? '✓ Ready' : '❌ ' + d.msg}</td></tr>`).join('')}</tbody></table>` : `<table class="preview-tbl"><thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Status</th></tr></thead><tbody>${bulkPreviewData.map((d, i) => `<tr class="${d.status}"><td>${i+1}</td><td>${esc(d.reg)}</td><td>${d.name ? esc(d.name) : '—'}</td><td>${d.status === 'ok' ? '✓ Ready' : '❌ ' + d.msg}</td></tr>`).join('')}</tbody></table>`;
+
+  let tblHtml;
+  if (mode === 'single') {
+    tblHtml = `<table class="preview-tbl"><thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Mark</th><th>Status</th></tr></thead><tbody>${bulkPreviewData.map((d, i) => `<tr class="${d.status}"><td>${i+1}</td><td>${esc(d.reg)}</td><td>${d.name ? esc(d.name) : '—'}</td><td>${d.mark !== undefined ? d.mark : '—'}</td><td>${d.status === 'ok' ? '✓ Ready' : '❌ ' + d.msg}</td></tr>`).join('')}</tbody></table>`;
+  } else {
+    tblHtml = `<table class="preview-tbl"><thead><tr><th>#</th><th>Reg No</th><th>Name</th>${comps.map(cp => `<th>${esc(cp.label)}</th>`).join('')}<th>Status</th></tr></thead><tbody>${bulkPreviewData.map((d, i) => `<tr class="${d.status}"><td>${i+1}</td><td>${esc(d.reg)}</td><td>${d.name ? esc(d.name) : '—'}</td>${comps.map(cp => `<td>${d.marks && d.marks[cp.key] !== undefined ? d.marks[cp.key] : '—'}</td>`).join('')}<td>${d.status === 'ok' ? '✓ Ready' : '❌ ' + d.msg}</td></tr>`).join('')}</tbody></table>`;
+  }
   wrap.innerHTML = `<div class="card"><div class="card-header"><h3 class="card-title">Preview Data (${okCount} valid)</h3></div><div class="table-wrap" style="max-height:300px; overflow-y:auto;">${tblHtml}</div></div>`;
   document.getElementById('btnApplyBulk').disabled = (okCount === 0);
 }
+
 function applyBulk() {
-  const c = activeClass(); if(!c) return; let count = 0;
-  bulkPreviewData.forEach(d => {
-    if(d.status !== 'ok') return; const student = c.students.find(s => s.reg.toLowerCase() === d.reg.toLowerCase()); if(!student) return;
-    if(d.cp) student.marks[d.cp.key] = d.mark; else if(d.marks) Object.assign(student.marks, d.marks); count++;
+  const c = activeClass(); if(!c) return;
+  const okItems = bulkPreviewData.filter(d => d.status === 'ok');
+  if (!confirm(`Apply ${okItems.length} marks to "${c.name}"? This will overwrite existing entries.`)) return;
+  let count = 0;
+  okItems.forEach(d => {
+    const student = c.students.find(s => s.reg.toLowerCase() === d.reg.toLowerCase()); if(!student) return;
+    if(d.cp) student.marks[d.cp.key] = d.mark;
+    else if(d.marks) Object.assign(student.marks, d.marks);
+    count++;
   });
   logAction('Bulk Upload', `Updated ${count} marks in ${c.name}`);
   save(); renderAll(); toast(`${count} students updated successfully ✅`); bulkPreviewData = []; renderBulk();
